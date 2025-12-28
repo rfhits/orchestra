@@ -15,10 +15,10 @@ function M.init_directories()
 
     -- 创建必要目录
     -- 因为 lua 没有文件系统 api 支持，所以用 reaper 方便
-    reaper.RecursiveCreateDirectory(orchestra_dir)
-    reaper.RecursiveCreateDirectory(inbox_dir)
-    reaper.RecursiveCreateDirectory(outbox_dir)
-    reaper.RecursiveCreateDirectory(archive_dir)
+    reaper.RecursiveCreateDirectory(orchestra_dir, 0)
+    reaper.RecursiveCreateDirectory(inbox_dir, 0)
+    reaper.RecursiveCreateDirectory(outbox_dir, 0)
+    reaper.RecursiveCreateDirectory(archive_dir, 0)
 
     M.info("Directories initialized")
 end

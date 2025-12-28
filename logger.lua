@@ -10,7 +10,7 @@ function M.init()
     local log_path = orchestra_dir .. "/orchestra.log"
 
     -- 确保目录存在
-    reaper.RecursiveCreateDirectory(orchestra_dir)
+    reaper.RecursiveCreateDirectory(orchestra_dir, 0)
 
     -- 打开日志文件
     log_file = io.open(log_path, "a")
