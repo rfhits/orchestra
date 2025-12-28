@@ -34,7 +34,7 @@
 
 ---
 
-## Orchestra File IPC Protocol v1 (Request-Reply One-Job-One-File)
+## Orchestra File IPC Protocol v1
 
 本协议用于 **MCP Server（Python）** 与 **DAW Host（Reaper/Lua）** 之间通过本地文件系统进行可靠通信。
 
@@ -177,7 +177,7 @@
 
 #### 字段定义
 
--   `meta.version`：协议版本号（整数），v1 固定为 `1`
+-   `meta.version`：协议版本号（字符串），v1 固定为 `"1"`
 -   `meta.id`：job id（必须与文件名一致）
 -   `meta.ts_ms`：毫秒时间戳（建议与文件名一致）
 -   `meta.agent_id`：来源标识（建议与文件名一致）
@@ -211,7 +211,7 @@
 ```json
 {
   "meta": {
-    "version": 1,
+    "version": "1",
     "id": "1732854000000_claude_7f3a9c1d2e4b6a8f",
     "ts_ms": 1732854000000,
     "agent_id": "claude"
@@ -233,7 +233,7 @@
 ```json
 {
   "meta": {
-    "version": 1,
+    "version": "1",
     "id": "1732854000000_claude_7f3a9c1d2e4b6a8f",
     "ts_ms": 1732854000000,
     "agent_id": "claude"
@@ -261,7 +261,7 @@
 ```json
 {
   "meta": {
-    "version": 1,
+    "version": "1",
     "id": "1732854000000_claude_7f3a9c1d2e4b6a8f",
     "ts_ms": 1732854000000,
     "agent_id": "claude"
