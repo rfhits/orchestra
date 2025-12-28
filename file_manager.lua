@@ -41,6 +41,8 @@ function M.list_pending_requests()
     local fileindex = 0 -- 从索引0开始遍历
 
     -- 循环遍历所有文件：直到 EnumerateFiles 返回 nil 停止
+    -- 强制刷新，防止缓存问题
+    reaper.EnumerateFiles(inbox_dir, -1)
     while true do
         -- 按索引获取文件名：返回字符串（文件名）或 nil（遍历完毕）
         local filename = reaper.EnumerateFiles(inbox_dir, fileindex)
@@ -72,6 +74,14 @@ function M.claim_request(filename)
 
     M.info("Attempting to claim request: " .. filename)
 
+    -- 检查源文件是否存在
+    local source_file = io.open(source_path, "r")
+    if not source_file then
+        M.info("Source file does not exist: " .. source_path)
+        return nil, nil
+    end
+    source_file:close()
+
     -- 尝试移动文件（原子操作）
     local success = os.rename(source_path, target_path)
     if success then
@@ -79,6 +89,12 @@ function M.claim_request(filename)
         return target_path, job_id
     else
         M.info("Failed to claim request: " .. filename)
+        -- 详细调试信息
+        local target_file = io.open(target_path, "r")
+        if target_file then
+            M.info("Target file already exists: " .. target_path)
+            target_file:close()
+        end
         return nil, nil
     end
 end
@@ -126,13 +142,55 @@ end
 -- 删除已处理的请求文件
 function M.cleanup_request(job_id)
     local req_path = outbox_dir .. "/" .. job_id .. ".req.json"
-    local success = os.remove(req_path)
-    if success then
+    local reply_path = outbox_dir .. "/" .. job_id .. ".reply.json"
+
+    -- 清理请求文件
+    local req_success = os.remove(req_path)
+    if req_success then
         M.info("Cleaned up request file: " .. job_id)
     else
         M.warn("Failed to cleanup request file: " .. job_id)
+        -- 尝试检查文件是否存在
+        local file = io.open(req_path, "r")
+        if file then
+            file:close()
+            M.warn("Request file still exists: " .. req_path)
+        else
+            M.info("Request file already removed: " .. job_id)
+        end
     end
-    return success
+
+    -- 清理回复文件（可选，保留一段时间）
+    local reply_success = os.remove(reply_path)
+    if reply_success then
+        M.info("Cleaned up reply file: " .. job_id)
+    end
+
+    return req_success
+end
+
+-- 强制清理所有已处理的文件
+function M.force_cleanup()
+    M.info("Performing force cleanup of processed files")
+
+    -- 清理outbox中所有的.reply.json文件（保留24小时以上的）
+    local fileindex = 0
+    while true do
+        local filename = reaper.EnumerateFiles(outbox_dir, fileindex)
+        if not filename then
+            break
+        end
+
+        if filename:match("%.reply%.json$") then
+            local file_path = outbox_dir .. "/" .. filename
+            local success = os.remove(file_path)
+            if success then
+                M.info("Force cleaned up old reply file: " .. filename)
+            end
+        end
+
+        fileindex = fileindex + 1
+    end
 end
 
 -- 获取目录路径

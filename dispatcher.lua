@@ -50,18 +50,19 @@ function M.dispatch(request_data, job_id)
     end
 
     -- 调用方法
-    local success, result = pcall(method, param)
+    M.info("parameters: " .. tostring(param))
+    local success, method_ok, response_data = pcall(method, param)
 
     if not success then
-        M.error("Method call failed for " .. func_name .. ": " .. tostring(result))
+        M.error("Method call failed for " .. func_name .. ": " .. tostring(method_ok))
         return M.create_error_response("METHOD_CALL_ERROR",
-            "Method call failed: " .. tostring(result), job_id)
+            "Method call failed: " .. tostring(method_ok), job_id)
     end
 
-    -- 处理返回结果
-    local unpack_success, response_data = table.unpack(result)
+    -- 处理返回结果（method_ok 是方法返回的第一个值，response_data 是第二个值）
+    M.info("Method call succeeded for " .. func_name)
 
-    if unpack_success then
+    if method_ok then
         return M.create_success_response(response_data, job_id, request_data)
     else
         return M.create_error_response(response_data.code or "METHOD_ERROR",

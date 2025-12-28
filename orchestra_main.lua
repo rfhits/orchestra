@@ -32,6 +32,19 @@ function M.start(loaded_modules)
         modules.file_manager.init_directories()
     end
 
+    -- 初始化需要logger的模块
+    if modules.project and modules.logger then
+        modules.project.init(modules.logger)
+    end
+
+    if modules.media and modules.logger then
+        modules.media.init(modules.logger)
+    end
+
+    if modules.track and modules.logger then
+        modules.track.init(modules.logger)
+    end
+
     if modules.dispatcher then
         modules.dispatcher.init(modules)
     end
@@ -129,10 +142,16 @@ function M.process_pending_requests()
         return -- 没有待处理的请求
     end
 
-    M.log("Found " .. #files .. " pending requests")
+    local success, error_msg = pcall(function()
+        M.log("Found " .. #files .. " pending requests")
 
-    for _, filename in ipairs(files) do
-        M.handle_single_request(filename)
+        for _, filename in ipairs(files) do
+            M.handle_single_request(filename)
+        end
+    end)
+
+    if not success then
+        M.log("Error in process_pending_requests: " .. tostring(error_msg), "error")
     end
 end
 
@@ -156,24 +175,29 @@ function M.handle_single_request(filename)
     if not content then
         M.log("Failed to read request: " .. read_err, "error")
         M.create_error_response(job_id, "FILE_READ_ERROR", read_err)
-        file_manager.cleanup_request(job_id)
+        -- file_manager.cleanup_request(job_id)
         return
     end
 
     -- 3. 解析JSON
+    M.log("content: " .. content, "debug")
     local request_data, parse_err = json_manager.parse(content)
+    M.log("request_data: " .. tostring(request_data), "debug")
     if not request_data then
         M.log("JSON parse error: " .. parse_err, "error")
         M.create_error_response(job_id, "JSON_PARSE_ERROR", parse_err, request_data)
-        file_manager.cleanup_request(job_id)
+        -- file_manager.cleanup_request(job_id)
         return
     end
 
     -- 4. 分派处理
     local response_data = dispatcher.dispatch(request_data, job_id)
+    M.log("Response data prepared for job: " .. job_id, "debug")
 
     -- 5. 生成响应JSON
     local response_json = json_manager.stringify(response_data)
+    M.log("Response JSON for job " .. job_id .. ": " .. response_json, "debug")
+    M.log("gonna write reply for job: " .. job_id)
 
     -- 6. 写入回复
     local write_success = file_manager.write_reply(job_id, response_json)
@@ -182,7 +206,7 @@ function M.handle_single_request(filename)
     end
 
     -- 7. 清理
-    file_manager.cleanup_request(job_id)
+    -- file_manager.cleanup_request(job_id)
     M.log("Completed request: " .. job_id)
 end
 
