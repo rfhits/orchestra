@@ -20,8 +20,9 @@ end
 
 -- 复制测试文件到inbox
 function M.copy_test_file(test_filename)
+    local timestamp = os.date("%Y%m%d_%H%M%S")
     local source_path = cases_dir .. "/" .. test_filename
-    local target_path = inbox_dir .. "/" .. test_filename
+    local target_path = inbox_dir .. "/" .. timestamp .. "_" .. test_filename
 
     M.info("Copying test file: " .. test_filename)
 
