@@ -7,20 +7,52 @@ local inbox_dir = nil
 local outbox_dir = nil
 local archive_dir = nil
 
+-- 引入配置模块
+local config = require("config")
+
 function M.init_directories()
-    orchestra_dir = reaper.GetResourcePath() .. "/.orchestra"
-    inbox_dir = orchestra_dir .. "/inbox"
-    outbox_dir = orchestra_dir .. "/outbox"
-    archive_dir = orchestra_dir .. "/archive"
+    local dirs = config.get_directories()
+    orchestra_dir = dirs.orchestra
+    inbox_dir = dirs.inbox
+    outbox_dir = dirs.outbox
+    archive_dir = dirs.archive
+
+    M.info("Initializing directories...")
+    M.info("Orchestra dir: " .. orchestra_dir)
+    M.info("Inbox dir: " .. inbox_dir)
+    M.info("Outbox dir: " .. outbox_dir)
+    M.info("Archive dir: " .. archive_dir)
 
     -- 创建必要目录
     -- 因为 lua 没有文件系统 api 支持，所以用 reaper 方便
-    reaper.RecursiveCreateDirectory(orchestra_dir, 0)
-    reaper.RecursiveCreateDirectory(inbox_dir, 0)
-    reaper.RecursiveCreateDirectory(outbox_dir, 0)
-    reaper.RecursiveCreateDirectory(archive_dir, 0)
+    config.init_directories()
 
-    M.info("Directories initialized")
+    -- 验证目录是否成功创建
+    local function check_dir_exists(dir_path, dir_name)
+        local test_file = io.open(dir_path .. "/.test_write", "w")
+        if test_file then
+            test_file:close()
+            os.remove(dir_path .. "/.test_write")
+            M.info(dir_name .. " directory is writable: " .. dir_path)
+            return true
+        else
+            M.error("Cannot write to " .. dir_name .. " directory: " .. dir_path)
+            return false
+        end
+    end
+
+    -- 验证所有目录
+    local all_dirs_ok = true
+    all_dirs_ok = check_dir_exists(orchestra_dir, "Orchestra") and all_dirs_ok
+    all_dirs_ok = check_dir_exists(inbox_dir, "Inbox") and all_dirs_ok
+    all_dirs_ok = check_dir_exists(outbox_dir, "Outbox") and all_dirs_ok
+    all_dirs_ok = check_dir_exists(archive_dir, "Archive") and all_dirs_ok
+
+    if all_dirs_ok then
+        M.info("All directories initialized successfully")
+    else
+        M.error("Some directories failed to initialize properly")
+    end
 end
 
 function M.info(message)
@@ -58,11 +90,13 @@ function M.list_pending_requests()
         local is_part = filename:match("%.part$")
         if is_json and not is_part then
             table.insert(files, filename) -- 符合条件则加入列表
+            M.info("Found pending request: " .. filename)
         end
 
         fileindex = fileindex + 1 -- 索引自增，遍历下一个文件
     end
 
+    -- M.info("Total pending requests found: " .. #files)
     return files -- 返回所有符合条件的 .json 文件名列表
 end
 

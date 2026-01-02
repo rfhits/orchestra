@@ -5,9 +5,14 @@
 local _, filename = reaper.get_action_context()
 local script_dir = filename:match("(.*[/\\])")
 
+-- 设置包路径以便找到 config.lua
+package.path = package.path .. ";" .. script_dir .. "?.lua"
+
+-- 引入配置模块
+local config = require("config")
+
 -- 简单的停止方法：在orchestra目录中创建一个停止信号文件
-local orchestra_dir = reaper.GetResourcePath() .. "/.orchestra"
-local stop_signal_file = orchestra_dir .. "/STOP_REQUEST"
+local stop_signal_file = config.get_stop_signal_file_path()
 
 -- 创建停止信号文件
 local file = io.open(stop_signal_file, "w")

@@ -5,7 +5,9 @@ local M = {}
 local modules = nil
 local is_running = false
 local stop_requested = false
-local orchestra_dir = reaper.GetResourcePath() .. "/.orchestra"
+
+-- 引入配置模块
+local config = require("config")
 
 -- 初始化主客户端
 function M.start(loaded_modules)
@@ -118,7 +120,7 @@ end
 -- 检查是否应该停止
 function M.should_stop()
     -- 检查停止信号文件
-    local stop_signal_file = orchestra_dir .. "/STOP_REQUEST"
+    local stop_signal_file = config.get_stop_signal_file_path()
     local file = io.open(stop_signal_file, "r")
     if file then
         file:close()

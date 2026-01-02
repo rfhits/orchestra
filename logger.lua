@@ -5,12 +5,14 @@ local M = {}
 local log_file = nil
 local log_enabled = true
 
+-- 引入配置模块
+local config = require("config")
+
 function M.init()
-    local orchestra_dir = reaper.GetResourcePath() .. "/.orchestra"
-    local log_path = orchestra_dir .. "/orchestra.log"
+    local log_path = config.get_log_file_path()
 
     -- 确保目录存在
-    reaper.RecursiveCreateDirectory(orchestra_dir, 0)
+    config.init_directories()
 
     -- 打开日志文件
     log_file = io.open(log_path, "a")
