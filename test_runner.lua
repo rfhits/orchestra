@@ -3,12 +3,17 @@
 
 local M = {}
 
--- 获取脚本目录
+-- 获取脚本目录并设置包路径
 local _, filename = reaper.get_action_context()
 local script_dir = filename:match("(.*[/\\])")
+package.path = package.path .. ";" .. script_dir .. "?.lua"
+
 local test_dir = script_dir .. "test"
 local cases_dir = test_dir .. "/cases"
-local inbox_dir = reaper.GetResourcePath() .. "/.orchestra/inbox"
+
+-- 引入配置模块
+local config = require("config")
+local inbox_dir = config.get_inbox_dir()
 
 function M.info(message)
     reaper.ShowConsoleMsg("[TestRunner] " .. message .. "\n")
