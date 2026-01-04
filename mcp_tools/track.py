@@ -3,7 +3,7 @@
 提供轨道相关的基础操作
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from mcp_bridge import bridge
 
@@ -22,67 +22,42 @@ def create(name: str = "新轨道", index: int = -1) -> Dict[str, Any]:
     return bridge.call_reaper("track.create", {"name": name, "index": index})
 
 
-# def delete(track_guid: str) -> Dict[str, Any]:
-#     """
-#     根据轨道 GUID 删除轨道
+def rename(index: int, name: str) -> Dict[str, Any]:
+    """
+    重命名轨道
 
-#     Args:
-#         track_guid: 轨道的唯一标识符
+    Args:
+        index: 轨道索引
+        name: 新名称
 
-#     Returns:
-#         操作结果
-#     """
-#     return bridge.call_reaper("track.delete", {
-#         "track_guid": track_guid
-#     })
-
-
-# def get_info(track_guid: str = "") -> Dict[str, Any]:
-#     """
-#     获取轨道信息
-
-#     Args:
-#         track_guid: 轨道 GUID (None 表示获取当前选中轨道)
-
-#     Returns:
-#         轨道信息
-#     """
-#     params = {}
-#     if track_guid:
-#         params["track_guid"] = track_guid
-
-#     return bridge.call_reaper("track.get_info", params)
+    Returns:
+        操作结果
+    """
+    return bridge.call_reaper("track.rename", {"index": index, "name": name})
 
 
-# def set_volume(track_guid: str, volume: float) -> Dict[str, Any]:
-#     """
-#     设置轨道音量
+def set_color(index: int, color: List[int]) -> Dict[str, Any]:
+    """
+    设置轨道颜色
 
-#     Args:
-#         track_guid: 轨道 GUID
-#         volume: 音量值 (0.0-1.0)
+    Args:
+        index: 轨道索引
+        color: 颜色值，rgb 数组格式，红色是 [255, 0, 0]
 
-#     Returns:
-#         操作结果
-#     """
-#     return bridge.call_reaper("track.set_volume", {
-#         "track_guid": track_guid,
-#         "volume": volume
-#     })
+    Returns:
+        操作结果
+    """
+    return bridge.call_reaper("track.set_color", {"index": index, "color": color})
 
 
-# def set_name(track_guid: str, name: str) -> Dict[str, Any]:
-#     """
-#     设置轨道名称
+def get_color(index: int) -> Dict[str, Any]:
+    """
+    获取轨道颜色
 
-#     Args:
-#         track_guid: 轨道 GUID
-#         name: 新名称
+    Args:
+        index: 轨道索引
 
-#     Returns:
-#         操作结果
-#     """
-#     return bridge.call_reaper("track.set_name", {
-#         "track_guid": track_guid,
-#         "name": name
-#     })
+    Returns:
+        轨道颜色信息，包含一个 rgb 数组，红色是 [255, 0, 0]
+    """
+    return bridge.call_reaper("track.get_color", {"index": index})
