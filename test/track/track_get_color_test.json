@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000000_track_get_color_test",
+    "ts_ms": 1732854000000,
+    "agent_id": "claude"
+  },
+  "request": {
+    "func": "track.get_color",
+    "param": {
+      "index": 0
+    }
+  }
+}

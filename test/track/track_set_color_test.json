@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000000_track_set_color_test",
+    "ts_ms": 1732854000000,
+    "agent_id": "claude"
+  },
+  "request": {
+    "func": "track.set_color",
+    "param": {
+      "index": 0,
+      "color": [
+        255,
+        0,
+        0
+      ]
+    }
+  }
+}

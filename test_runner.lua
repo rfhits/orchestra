@@ -9,7 +9,6 @@ local script_dir = filename:match("(.*[/\\])")
 package.path = package.path .. ";" .. script_dir .. "?.lua"
 
 local test_dir = script_dir .. "test"
-local cases_dir = test_dir .. "/cases"
 
 -- 引入配置模块
 local config = require("config")
@@ -24,12 +23,12 @@ function M.error(message)
 end
 
 -- 复制测试文件到inbox
-function M.copy_test_file(test_filename)
+function M.copy_test_file(test_subdir, test_filename)
     local timestamp = os.date("%Y%m%d_%H%M%S")
-    local source_path = cases_dir .. "/" .. test_filename
+    local source_path = test_dir .. "/" .. test_subdir .. "/" .. test_filename
     local target_path = inbox_dir .. "/" .. timestamp .. "_" .. test_filename
 
-    M.info("Copying test file: " .. test_filename)
+    M.info("Copying test file: " .. test_subdir .. "/" .. test_filename)
 
     -- 读取源文件
     local source_file = io.open(source_path, "r")
@@ -55,20 +54,20 @@ function M.copy_test_file(test_filename)
     -- 原子重命名
     local success = os.rename(part_path, target_path)
     if success then
-        M.info("Test file ready: " .. test_filename)
+        M.info("Test file ready: " .. test_subdir .. "/" .. test_filename)
         return true
     else
-        M.error("Failed to finalize test file: " .. test_filename)
+        M.error("Failed to finalize test file: " .. test_subdir .. "/" .. test_filename)
         return false
     end
 end
 
 -- 运行单个测试
-function M.run_test(test_filename)
-    M.info("Running test: " .. test_filename)
+function M.run_test(test_subdir, test_filename)
+    M.info("Running test: " .. test_subdir .. "/" .. test_filename)
 
     -- 复制测试文件
-    if not M.copy_test_file(test_filename) then
+    if not M.copy_test_file(test_subdir, test_filename) then
         return false
     end
 
@@ -81,16 +80,21 @@ function M.run_all_tests()
     M.info("Running all tests...")
 
     local test_files = {
-        "track_create_test.json",
-        "track_delete_test.json",
-        "media_insert_test.json",
-        "project_get_info_test.json",
-        "error_test_invalid_function.json"
+        {subdir = "track", filename = "track_create_test.json"},
+        {subdir = "track", filename = "track_delete_test.json"},
+        {subdir = "track", filename = "track_rename_test.json"},
+        {subdir = "track", filename = "track_set_color_test.json"},
+        {subdir = "track", filename = "track_get_color_test.json"},
+        {subdir = "media", filename = "media_insert_test.json"},
+        {subdir = "project", filename = "project_get_info_test.json"},
+        {subdir = "project", filename = "project_get_track_count_test.json"},
+        {subdir = "project", filename = "project_get_track_list_test.json"},
+        {subdir = "common", filename = "error_test_invalid_function.json"}
     }
 
     local success_count = 0
-    for _, test_file in ipairs(test_files) do
-        if M.run_test(test_file) then
+    for _, test_info in ipairs(test_files) do
+        if M.run_test(test_info.subdir, test_info.filename) then
             success_count = success_count + 1
         end
         reaper.Sleep(500) -- 短暂延迟
@@ -101,23 +105,43 @@ end
 
 -- 手动测试函数
 function M.test_track_create()
-    M.run_test("track_create_test.json")
+    M.run_test("track", "track_create_test.json")
 end
 
 function M.test_track_delete()
-    M.run_test("track_delete_test.json")
+    M.run_test("track", "track_delete_test.json")
+end
+
+function M.test_track_rename()
+    M.run_test("track", "track_rename_test.json")
+end
+
+function M.test_track_set_color()
+    M.run_test("track", "track_set_color_test.json")
+end
+
+function M.test_track_get_color()
+    M.run_test("track", "track_get_color_test.json")
 end
 
 function M.test_media_insert()
-    M.run_test("media_insert_test.json")
+    M.run_test("media", "media_insert_test.json")
 end
 
 function M.test_project_info()
-    M.run_test("project_get_info_test.json")
+    M.run_test("project", "project_get_info_test.json")
+end
+
+function M.test_project_get_track_count()
+    M.run_test("project", "project_get_track_count_test.json")
+end
+
+function M.test_project_get_track_list()
+    M.run_test("project", "project_get_track_list_test.json")
 end
 
 function M.test_error_handling()
-    M.run_test("error_test_invalid_function.json")
+    M.run_test("common", "error_test_invalid_function.json")
 end
 
 -- 主测试菜单
@@ -126,13 +150,18 @@ function M.show_menu()
     local menu_prompt = [[Orchestra Test Menu:
 1. Test Track Create
 2. Test Track Delete
-3. Test Media Insert
-4. Test Project Info
-5. Test Error Handling
-6. Run All Tests
-7. Exit
+3. Test Track Rename
+4. Test Track Set Color
+5. Test Track Get Color
+6. Test Media Insert
+7. Test Project Info
+8. Test Project Get Track Count
+9. Test Project Get Track List
+10. Test Error Handling
+11. Run All Tests
+12. Exit
 
-请输入选择（1-7）：]]
+请输入选择（1-12）：]]
 
     -- 弹出输入框，获取用户选择
     local user_ok, input_str = reaper.GetUserInputs(
@@ -157,8 +186,8 @@ function M.show_menu()
     end
 
     -- 验证数字范围
-    if choice < 1 or choice > 7 then
-        reaper.ShowMessageBox("输入超出范围！请输入1-7之间的数字。", "错误", 0)
+    if choice < 1 or choice > 12 then
+        reaper.ShowMessageBox("输入超出范围！请输入1-12之间的数字。", "错误", 0)
         M.show_menu() -- 重新显示菜单
         return
     end
@@ -169,14 +198,24 @@ function M.show_menu()
     elseif choice == 2 then
         M.test_track_delete()
     elseif choice == 3 then
-        M.test_media_insert()
+        M.test_track_rename()
     elseif choice == 4 then
-        M.test_project_info()
+        M.test_track_set_color()
     elseif choice == 5 then
-        M.test_error_handling()
+        M.test_track_get_color()
     elseif choice == 6 then
-        M.run_all_tests()
+        M.test_media_insert()
     elseif choice == 7 then
+        M.test_project_info()
+    elseif choice == 8 then
+        M.test_project_get_track_count()
+    elseif choice == 9 then
+        M.test_project_get_track_list()
+    elseif choice == 10 then
+        M.test_error_handling()
+    elseif choice == 11 then
+        M.run_all_tests()
+    elseif choice == 12 then
         M.info("Test completed.")
     end
 end

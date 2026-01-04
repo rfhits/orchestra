@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000000_track_rename_test",
+    "ts_ms": 1732854000000,
+    "agent_id": "claude"
+  },
+  "request": {
+    "func": "track.rename",
+    "param": {
+      "index": 0,
+      "name": "electric_guitar"
+    }
+  }
+}
