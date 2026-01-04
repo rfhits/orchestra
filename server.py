@@ -52,7 +52,7 @@ def register_all_tools():
                     continue
 
                 # 4. 生成工具名 (如 track_create)
-                tool_name = f"{module_name}_{name}"
+                tool_name = f"{module_name}.{name}"
                 
                 # 5. 核心修正：直接注册原始函数
                 # FastMCP 会自动读取 func 的 Type Hints 生成 Schema
