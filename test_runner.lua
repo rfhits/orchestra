@@ -80,16 +80,16 @@ function M.run_all_tests()
     M.info("Running all tests...")
 
     local test_files = {
-        {subdir = "track", filename = "track_create_test.json"},
-        {subdir = "track", filename = "track_delete_test.json"},
-        {subdir = "track", filename = "track_rename_test.json"},
-        {subdir = "track", filename = "track_set_color_test.json"},
-        {subdir = "track", filename = "track_get_color_test.json"},
-        {subdir = "media", filename = "media_insert_test.json"},
-        {subdir = "project", filename = "project_get_info_test.json"},
-        {subdir = "project", filename = "project_get_track_count_test.json"},
-        {subdir = "project", filename = "project_get_track_list_test.json"},
-        {subdir = "common", filename = "error_test_invalid_function.json"}
+        { subdir = "track",   filename = "track_create_test.json" },
+        { subdir = "track",   filename = "track_delete_test.json" },
+        { subdir = "track",   filename = "track_rename_test.json" },
+        { subdir = "track",   filename = "track_set_color_test.json" },
+        { subdir = "track",   filename = "track_get_color_test.json" },
+        { subdir = "media",   filename = "media_insert_test.json" },
+        { subdir = "project", filename = "project_get_info_test.json" },
+        { subdir = "project", filename = "project_get_track_count_test.json" },
+        { subdir = "project", filename = "project_get_track_list_test.json" },
+        { subdir = "common",  filename = "error_test_invalid_function.json" }
     }
 
     local success_count = 0
@@ -144,55 +144,52 @@ function M.test_error_handling()
     M.run_test("common", "error_test_invalid_function.json")
 end
 
--- 主测试菜单
 function M.show_menu()
-    -- 菜单文本（精简为提示信息）
-    local menu_prompt = [[Orchestra Test Menu:
-1. Test Track Create
-2. Test Track Delete
-3. Test Track Rename
-4. Test Track Set Color
-5. Test Track Get Color
-6. Test Media Insert
-7. Test Project Info
-8. Test Project Get Track Count
-9. Test Project Get Track List
+    -- 1. 将菜单内容定义为一个清晰的字符串
+    local menu_text = [[
+==== Orchestra Test Menu ====
+1.  Test Track Create
+2.  Test Track Delete
+3.  Test Track Rename
+4.  Test Track Set Color
+5.  Test Track Get Color
+6.  Test Media Insert
+7.  Test Project Info
+8.  Test Project Get Track Count
+9.  Test Project Get Track List
 10. Test Error Handling
 11. Run All Tests
 12. Exit
+============================
+]]
 
-请输入选择（1-12）：]]
+    -- 2. 核心改进：先在控制台显示菜单，防止用户看不见选项
+    reaper.ClearConsole()
+    reaper.ShowConsoleMsg(menu_text)
 
-    -- 弹出输入框，获取用户选择
+    -- 3. 弹出简洁的输入框
+    -- 注意：这里的提示语极短，确保它能显示出来
     local user_ok, input_str = reaper.GetUserInputs(
-        "Orchestra Test", -- 弹窗标题
-        1,                -- 1个输入框
-        menu_prompt,      -- 输入提示
-        ""                -- 输入框默认值为空
+        "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
+        1,
+        "Enter Choice (1-12):",                    -- 左侧提示保持简短
+        ""
     )
 
-    -- 处理用户取消操作（点了Cancel）
     if not user_ok then
         M.info("操作已取消。")
         return
     end
 
-    -- 将输入的字符串转为数字，并验证合法性
-    local choice = tonumber(input_str) -- 字符串转数字（非数字返回nil）
-    if not choice then
-        reaper.ShowMessageBox("输入无效！请输入1-7之间的数字。", "错误", 0)
-        M.show_menu() -- 重新显示菜单
-        return
+    local choice = tonumber(input_str)
+
+    -- 4. 校验逻辑 (保持你的原有逻辑)
+    if not choice or choice < 1 or choice > 12 then
+        reaper.ShowMessageBox("输入无效！请输入1-12之间的数字。", "错误", 0)
+        return M.show_menu() -- 递归重新显示
     end
 
-    -- 验证数字范围
-    if choice < 1 or choice > 12 then
-        reaper.ShowMessageBox("输入超出范围！请输入1-12之间的数字。", "错误", 0)
-        M.show_menu() -- 重新显示菜单
-        return
-    end
-
-    -- 执行对应操作（保留原逻辑）
+    -- 5. 执行对应操作
     if choice == 1 then
         M.test_track_create()
     elseif choice == 2 then
