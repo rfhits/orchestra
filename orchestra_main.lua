@@ -17,7 +17,7 @@ function M.start(loaded_modules)
     M.log("Starting Orchestra Client...")
 
     -- 验证必需的模块
-    local required_modules = { "file_manager", "json_manager", "track", "media", "project", "dispatcher" }
+    local required_modules = { "file_manager", "json_manager", "track", "project", "dispatcher" }
     for _, module_name in ipairs(required_modules) do
         if not modules[module_name] then
             M.log("ERROR: Required module " .. module_name .. " not loaded", "error")
@@ -39,9 +39,10 @@ function M.start(loaded_modules)
         modules.project.init(modules.logger)
     end
 
-    if modules.media and modules.logger then
-        modules.media.init(modules.logger)
+    if modules.audio and modules.logger then
+        modules.audio.init(modules.logger)
     end
+
 
     if modules.track and modules.logger then
         modules.track.init(modules.logger)

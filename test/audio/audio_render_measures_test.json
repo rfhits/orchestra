@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000004_audio_render_measures_test",
+    "ts_ms": 1732854000004,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "audio.render_measures",
+    "param": {
+      "tracks": ["0", 8],
+      "begin": 1,
+      "len": 3,
+      "filename": "render_m1_l3.wav"
+    }
+  }
+}

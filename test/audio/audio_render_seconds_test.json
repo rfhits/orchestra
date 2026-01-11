@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000003_audio_render_seconds_test",
+    "ts_ms": 1732854000003,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "audio.render_seconds",
+    "param": {
+      "tracks": ["0", 8],
+      "begin": 0,
+      "len": 10,
+      "filename": "render_test.wav"
+    }
+  }
+}

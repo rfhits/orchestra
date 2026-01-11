@@ -85,7 +85,11 @@ function M.run_all_tests()
         { subdir = "track",   filename = "track_rename_test.json" },
         { subdir = "track",   filename = "track_set_color_test.json" },
         { subdir = "track",   filename = "track_get_color_test.json" },
-        { subdir = "media",   filename = "media_insert_test.json" },
+        { subdir = "audio",   filename = "audio_insert_test.json" },
+        { subdir = "audio",   filename = "audio_insert_at_second_test.json" },
+        { subdir = "audio",   filename = "audio_insert_at_measure_test.json" },
+        { subdir = "audio",   filename = "audio_render_seconds_test.json" },
+        { subdir = "audio",   filename = "audio_render_measures_test.json" },
         { subdir = "project", filename = "project_get_info_test.json" },
         { subdir = "project", filename = "project_get_track_count_test.json" },
         { subdir = "project", filename = "project_get_track_list_test.json" },
@@ -124,9 +128,6 @@ function M.test_track_get_color()
     M.run_test("track", "track_get_color_test.json")
 end
 
-function M.test_media_insert()
-    M.run_test("media", "media_insert_test.json")
-end
 
 function M.test_project_info()
     M.run_test("project", "project_get_info_test.json")
@@ -144,6 +145,27 @@ function M.test_error_handling()
     M.run_test("common", "error_test_invalid_function.json")
 end
 
+-- Audio Test Functions
+function M.test_audio_insert()
+    M.run_test("audio", "audio_insert_test.json")
+end
+
+function M.test_audio_insert_at_second()
+    M.run_test("audio", "audio_insert_at_second_test.json")
+end
+
+function M.test_audio_insert_at_measure()
+    M.run_test("audio", "audio_insert_at_measure_test.json")
+end
+
+function M.test_audio_render_seconds()
+    M.run_test("audio", "audio_render_seconds_test.json")
+end
+
+function M.test_audio_render_measures()
+    M.run_test("audio", "audio_render_measures_test.json")
+end
+
 function M.show_menu()
     -- 1. 将菜单内容定义为一个清晰的字符串
     local menu_text = [[
@@ -153,18 +175,21 @@ function M.show_menu()
 3.  Test Track Rename
 4.  Test Track Set Color
 5.  Test Track Get Color
-6.  Test Media Insert
-7.  Test Project Info
-8.  Test Project Get Track Count
-9.  Test Project Get Track List
-10. Test Error Handling
-11. Run All Tests
-12. Exit
-============================
+6.  Test Audio Insert
+7.  Test Audio Insert at Second
+8.  Test Audio Insert at Measure
+9.  Test Audio Render Seconds
+10. Test Audio Render Measures
+11. Test Project Info
+12. Test Project Get Track Count
+13. Test Project Get Track List
+14. Test Error Handling
+15. Run All Tests
+16. Exit
+===========================
 ]]
 
     -- 2. 核心改进：先在控制台显示菜单，防止用户看不见选项
-    reaper.ClearConsole()
     reaper.ShowConsoleMsg(menu_text)
 
     -- 3. 弹出简洁的输入框
@@ -172,7 +197,7 @@ function M.show_menu()
     local user_ok, input_str = reaper.GetUserInputs(
         "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
         1,
-        "Enter Choice (1-12):",                    -- 左侧提示保持简短
+        "Enter Choice (1-16):",                    -- 左侧提示保持简短
         ""
     )
 
@@ -184,8 +209,8 @@ function M.show_menu()
     local choice = tonumber(input_str)
 
     -- 4. 校验逻辑 (保持你的原有逻辑)
-    if not choice or choice < 1 or choice > 12 then
-        reaper.ShowMessageBox("输入无效！请输入1-12之间的数字。", "错误", 0)
+    if not choice or choice < 1 or choice > 16 then
+        reaper.ShowMessageBox("输入无效！请输入1-16之间的数字。", "错误", 0)
         return M.show_menu() -- 递归重新显示
     end
 
@@ -201,18 +226,26 @@ function M.show_menu()
     elseif choice == 5 then
         M.test_track_get_color()
     elseif choice == 6 then
-        M.test_media_insert()
+        M.test_audio_insert()
     elseif choice == 7 then
-        M.test_project_info()
+        M.test_audio_insert_at_second()
     elseif choice == 8 then
-        M.test_project_get_track_count()
+        M.test_audio_insert_at_measure()
     elseif choice == 9 then
-        M.test_project_get_track_list()
+        M.test_audio_render_seconds()
     elseif choice == 10 then
-        M.test_error_handling()
+        M.test_audio_render_measures()
     elseif choice == 11 then
-        M.run_all_tests()
+        M.test_project_info()
     elseif choice == 12 then
+        M.test_project_get_track_count()
+    elseif choice == 13 then
+        M.test_project_get_track_list()
+    elseif choice == 14 then
+        M.test_error_handling()
+    elseif choice == 15 then
+        M.run_all_tests()
+    elseif choice == 16 then
         M.info("Test completed.")
     end
 end

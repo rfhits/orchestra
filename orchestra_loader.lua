@@ -46,8 +46,8 @@ local function load_orchestra_modules()
         "file_manager",
         "json_manager",
         "track",
-        "media",
         "project",
+        "audio",
         "dispatcher",
         "logger"
     }
@@ -76,7 +76,7 @@ local function start_orchestra_client()
     end
 
     -- 检查关键模块是否加载成功
-    local required_modules = { "file_manager", "json_manager", "track", "media", "project", "dispatcher" }
+    local required_modules = { "file_manager", "json_manager", "track", "project", "dispatcher" }
     for _, module_name in ipairs(required_modules) do
         if not modules[module_name] then
             reaper.ShowMessageBox("Required module " .. module_name .. " failed to load", "Orchestra Error", 0)

@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000000_audio_insert_test",
+    "ts_ms": 1732854000000,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "audio.insert",
+    "param": {
+      "file_path": "C:\\Users\\rfntts\\AppData\\Roaming\\REAPER\\Scripts\\orchestra\\test\\audio\\twinkle-twinkle-little-star.mp3",
+      "track": "0",
+      "position": 0
+    }
+  }
+}
