@@ -1,0 +1,5 @@
+.VSCodeCounter/
+.kilocode/
+.vscode/
+__pychache__/
+*.pyc
