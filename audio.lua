@@ -135,9 +135,8 @@ function M.render_measures(param)
     local begin_meas_input = param.begin or 1
     local len_meas = param.len or 1
     -- 0-based 转换
-    local start_meas_idx = begin_meas_input - 1
-    local begin_sec = reaper.TimeMap2_beatsToTime(0, 0, start_meas_idx)
-    local end_sec = reaper.TimeMap2_beatsToTime(0, 0, start_meas_idx + len_meas)
+    local begin_sec = measure_to_second(begin_meas_input)
+    local end_sec = measure_to_second(begin_meas_input + len_meas)
 
     local filename = param.filename or string.format("render_m%d_l%d.wav", begin_meas_input, len_meas)
     local path = perform_render(param.tracks, begin_sec, end_sec, filename)
