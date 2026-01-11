@@ -113,10 +113,11 @@ function M.get_info(permit)
 end
 
 function M.find_track_by_guid(track_guid)
+    if not track_guid or track_guid == "" then return nil end
     local num_tracks = reaper.CountTracks(0)
     for i = 0, num_tracks - 1 do
         local track = reaper.GetTrack(0, i)
-        local _, guid = reaper.GetSetMediaTrackInfo_Value(track, "P_GUID", "")
+        local guid = reaper.GetTrackGUID(track) -- 使用更高效的专用 API
         if guid == track_guid then
             return track
         end
@@ -130,6 +131,39 @@ function M.find_track_by_index(track_index)
         return nil
     end
     return reaper.GetTrack(0, track_index)
+end
+
+function M.find_track_by_name(track_name)
+    local num_tracks = reaper.CountTracks(0)
+    for i = 0, num_tracks - 1 do
+        local track = reaper.GetTrack(0, i)
+        local _, name = reaper.GetSetMediaTrackInfo_String(track, "P_NAME", "", false)
+        if name == track_name then
+            return track
+        end
+    end
+    return nil
+end
+
+--- 统一查找轨道函数
+-- @param track_identifier string|number 轨道标识符，可以是 GUID、名称或索引
+-- @return MediaTrack|nil 找到的轨道对象
+function M.find_track(track_identifier)
+    if type(track_identifier) == "number" then
+        return M.find_track_by_index(track_identifier)
+    elseif type(track_identifier) == "string" then
+        -- 优先匹配 GUID 格式 {GUID...}
+        if track_identifier:match("^{.-}$") then
+            return M.find_track_by_guid(track_identifier)
+        end
+
+        local track = M.find_track_by_name(track_identifier)
+        if track then return track end
+
+        local track_index = tonumber(track_identifier)
+        if track_index then return M.find_track_by_index(track_index) end
+    end
+    return nil
 end
 
 function M.rename(param)
@@ -239,7 +273,7 @@ function M.get_color(params)
         return true, {
             track_index = track_index,
             has_custom_color = false,
-            rgb = {200, 200, 200} -- 返回一个中性的默认提示色，或者 null
+            rgb = { 200, 200, 200 } -- 返回一个中性的默认提示色，或者 null
         }
     end
 
@@ -250,11 +284,11 @@ function M.get_color(params)
     local r, g, b = reaper.ColorFromNative(native_color)
 
     logger.info(string.format("获取轨道颜色成功: Index %d, RGB(%d,%d,%d)", track_index, r, g, b))
-    
+
     return true, {
         track_index = track_index,
         has_custom_color = true,
-        rgb = {r, g, b},
+        rgb = { r, g, b },
         hex = string.format("#%02X%02X%02X", r, g, b) -- 顺便返回 Hex，方便 Python 处理
     }
 end
