@@ -7,3 +7,5 @@
 
 -   [x] audio.render_measures(tracks, begin, len)
 -   [x] audio.render_seconds(tracks, begin, len)
+
+导出的 track 需要涵盖 midi 和 wav 两种，测试已通过
