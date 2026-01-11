@@ -95,6 +95,13 @@ local function perform_render(tracks, start_time, end_time, output_filename)
         logger.info("未指定特定轨道，将渲染 Master Mix (当前已清理所有 Mute/Solo)")
     end
 
+    -- 4. 【核心保护逻辑】：原生方式强制素材上线
+    -- 逻辑：选中所有 Item -> 执行上线指令 -> 取消选中
+    -- 这会强制 REAPER 扫描并加载所有选中的素材，防止渲染出静音
+    reaper.Main_OnCommand(40182, 0) -- Item: Select all items
+    reaper.Main_OnCommand(40101, 0) -- Media items: Set all media online
+    reaper.Main_OnCommand(40289, 0) -- Item: Unselect all items
+
     -- 4. 配置输出路径
     local outbox_dir = config.get_outbox_dir() -- 假设 config 已在外部定义
     -- 去掉文件名扩展名，防止生成 .wav.wav
