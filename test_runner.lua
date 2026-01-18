@@ -90,6 +90,11 @@ function M.run_all_tests()
         { subdir = "audio",   filename = "audio_insert_at_measure_test.json" },
         { subdir = "audio",   filename = "audio_render_seconds_test.json" },
         { subdir = "audio",   filename = "audio_render_measures_test.json" },
+        { subdir = "midi",    filename = "midi_render_seconds_test.json" },
+        { subdir = "midi",    filename = "midi_render_measures_test.json" },
+        { subdir = "midi",    filename = "midi_insert_at_second_test.json" },
+        { subdir = "midi",    filename = "midi_insert_at_measure_test.json" },
+        { subdir = "midi",    filename = "midi_insert_named_track_test.json" },
         { subdir = "project", filename = "project_get_info_test.json" },
         { subdir = "project", filename = "project_get_track_count_test.json" },
         { subdir = "project", filename = "project_get_track_list_test.json" },
@@ -166,6 +171,27 @@ function M.test_audio_render_measures()
     M.run_test("audio", "audio_render_measures_test.json")
 end
 
+-- MIDI Test Functions
+function M.test_midi_render_seconds()
+    M.run_test("midi", "midi_render_seconds_test.json")
+end
+
+function M.test_midi_render_measures()
+    M.run_test("midi", "midi_render_measures_test.json")
+end
+
+function M.test_midi_insert_at_second()
+    M.run_test("midi", "midi_insert_at_second_test.json")
+end
+
+function M.test_midi_insert_at_measure()
+    M.run_test("midi", "midi_insert_at_measure_test.json")
+end
+
+function M.test_midi_insert_named_track()
+    M.run_test("midi", "midi_insert_named_track_test.json")
+end
+
 function M.show_menu()
     -- 1. 将菜单内容定义为一个清晰的字符串
     local menu_text = [[
@@ -180,12 +206,17 @@ function M.show_menu()
 8.  Test Audio Insert at Measure
 9.  Test Audio Render Seconds
 10. Test Audio Render Measures
-11. Test Project Info
-12. Test Project Get Track Count
-13. Test Project Get Track List
-14. Test Error Handling
-15. Run All Tests
-16. Exit
+11. Test MIDI Render Seconds
+12. Test MIDI Render Measures
+13. Test MIDI Insert at Second
+14. Test MIDI Insert at Measure
+15. Test MIDI Insert Named Track
+16. Test Project Info
+17. Test Project Get Track Count
+18. Test Project Get Track List
+19. Test Error Handling
+20. Run All Tests
+21. Exit
 ===========================
 ]]
 
@@ -197,7 +228,7 @@ function M.show_menu()
     local user_ok, input_str = reaper.GetUserInputs(
         "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
         1,
-        "Enter Choice (1-16):",                    -- 左侧提示保持简短
+        "Enter Choice (1-21):",                    -- 左侧提示保持简短
         ""
     )
 
@@ -209,8 +240,8 @@ function M.show_menu()
     local choice = tonumber(input_str)
 
     -- 4. 校验逻辑 (保持你的原有逻辑)
-    if not choice or choice < 1 or choice > 16 then
-        reaper.ShowMessageBox("输入无效！请输入1-16之间的数字。", "错误", 0)
+    if not choice or choice < 1 or choice > 21 then
+        reaper.ShowMessageBox("输入无效！请输入1-21之间的数字。", "错误", 0)
         return M.show_menu() -- 递归重新显示
     end
 
@@ -236,16 +267,26 @@ function M.show_menu()
     elseif choice == 10 then
         M.test_audio_render_measures()
     elseif choice == 11 then
-        M.test_project_info()
+        M.test_midi_render_seconds()
     elseif choice == 12 then
-        M.test_project_get_track_count()
+        M.test_midi_render_measures()
     elseif choice == 13 then
-        M.test_project_get_track_list()
+        M.test_midi_insert_at_second()
     elseif choice == 14 then
-        M.test_error_handling()
+        M.test_midi_insert_at_measure()
     elseif choice == 15 then
-        M.run_all_tests()
+        M.test_midi_insert_named_track()
     elseif choice == 16 then
+        M.test_project_info()
+    elseif choice == 17 then
+        M.test_project_get_track_count()
+    elseif choice == 18 then
+        M.test_project_get_track_list()
+    elseif choice == 19 then
+        M.test_error_handling()
+    elseif choice == 20 then
+        M.run_all_tests()
+    elseif choice == 21 then
         M.info("Test completed.")
     end
 end
