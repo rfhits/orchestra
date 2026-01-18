@@ -43,6 +43,10 @@ function M.start(loaded_modules)
         modules.audio.init(modules.logger)
     end
 
+    if modules.midi and modules.logger then
+        modules.midi.init(modules.logger)
+    end
+
 
     if modules.track and modules.logger then
         modules.track.init(modules.logger)

@@ -5,39 +5,15 @@ local M = {}
 local logger = nil
 local config = require("config")
 local track_module = nil
+local time_map = require("time_map")
 
 function M.init(log_module)
     logger = log_module.get_logger("Audio")
     track_module = require("track")
+    time_map.init(log_module)
     logger.info("Audio 模块初始化完成")
 end
 
---- [核心逻辑] 将浮点小节(1.5)转换为物理秒数
--- @param float_meas number 1-based 小节, 如 1.5 代表第 1 小节过了一半
-local function measure_to_second(float_meas)
-    if float_meas < 1 then float_meas = 1 end
-
-    local m_int = math.floor(float_meas) -- 整数部分 (小节)
-    local m_frac = float_meas - m_int    -- 小数部分 (百分比)
-
-    -- 1. 获取该小节开头的秒数 (API 为 0-based)
-    local start_of_meas_sec = reaper.TimeMap2_beatsToTime(0, 0, m_int - 1)
-
-    -- 2. 获取该位置的拍号 (Time Signature)
-    -- Lua 只有 2 个输入参数，返回值为: num (分子), denom (分母), tempo (BPM)
-    local num, denom, tempo = reaper.TimeMap_GetTimeSigAtTime(0, start_of_meas_sec)
-
-    -- 3. 计算偏移拍数 (如 0.5 小节 * 4 拍 = 2 拍)
-    local beat_offset = m_frac * num
-
-    -- 4. 结合整数小节和偏移拍数计算最终时间
-    local final_sec = reaper.TimeMap2_beatsToTime(0, beat_offset, m_int - 1)
-
-    logger.debug(string.format("小节转换 | 输入:%.2f -> 索引:%d, 偏移:%.2f拍, 拍号:%d/%d -> 秒:%.3f",
-        float_meas, m_int - 1, beat_offset, num, denom, final_sec))
-
-    return final_sec
-end
 
 --[[
     执行渲染的核心逻辑 (全状态保护版)
@@ -142,8 +118,8 @@ function M.render_measures(param)
     local begin_meas_input = param.begin or 1
     local len_meas = param.len or 1
     -- 0-based 转换
-    local begin_sec = measure_to_second(begin_meas_input)
-    local end_sec = measure_to_second(begin_meas_input + len_meas)
+    local begin_sec = time_map.measure_to_second(begin_meas_input)
+    local end_sec = time_map.measure_to_second(begin_meas_input + len_meas)
 
     local filename = param.filename or string.format("render_m%d_l%d.wav", begin_meas_input, len_meas)
     local path = perform_render(param.tracks, begin_sec, end_sec, filename)
@@ -222,7 +198,7 @@ function M.insert_at_second(param)
 end
 
 function M.insert_at_measure(param)
-    local sec = measure_to_second(param.measure or 1)
+    local sec = time_map.measure_to_second(param.measure or 1)
     return M.insert({
         file_path = param.file_path,
         track = param.track,

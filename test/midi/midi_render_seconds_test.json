@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000001_midi_render_seconds_test",
+    "ts_ms": 1732854000001,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "midi.render_seconds",
+    "param": {
+      "tracks": [1, 2, "3"],
+      "begin": 0,
+      "len": 10,
+      "session_id": "test_render_seconds"
+    }
+  }
+}

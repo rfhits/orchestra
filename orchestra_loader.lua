@@ -45,11 +45,14 @@ local function load_orchestra_modules()
     local modules = {
         "file_manager",
         "json_manager",
+        "logger",
+        "config",
+        "time_map",
         "track",
         "project",
         "audio",
-        "dispatcher",
-        "logger"
+        "midi",
+        "dispatcher"
     }
 
     local loaded_modules = {}
@@ -87,6 +90,11 @@ local function start_orchestra_client()
     -- 初始化日志
     if modules.logger then
         modules.logger.init()
+    end
+
+    -- 初始化时间映射模块（依赖 logger）
+    if modules.time_map then
+        modules.time_map.init(modules.logger)
     end
 
     -- 初始化文件系统

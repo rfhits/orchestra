@@ -8,7 +8,13 @@
   "request": {
     "func": "audio.render_measures",
     "param": {
-      "tracks": ["0", 8],
+      "tracks": [
+        "0",
+        1,
+        2,
+        3,
+        8
+      ],
       "begin": 1,
       "len": 3,
       "filename": "render_m1_l3.wav"
