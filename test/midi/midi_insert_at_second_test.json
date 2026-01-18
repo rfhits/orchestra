@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000003_midi_insert_at_second_test",
+    "ts_ms": 1732854000003,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "midi.insert_at_second",
+    "param": {
+      "track": "11",
+      "second": 2,
+      "file_path": "C:\\Users\\rfntts\\AppData\\Roaming\\REAPER\\Scripts\\orchestra\\test\\midi\\01_piano.mid"
+    }
+  }
+}

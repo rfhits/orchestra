@@ -518,6 +518,116 @@ local function perform_midi_render(tracks, start_time, end_time, session_id)
 end
 
 ----------------------------------------------------------------
+-- 静默导入 MIDI 文件（支持带 TimeMap 的 MIDI，无弹窗）
+----------------------------------------------------------------
+
+-- 验证文件是否为有效的 MIDI 文件
+local function is_valid_midi_file(file_path)
+    if not file_path or file_path == "" then
+        logger.error("文件路径为空")
+        return false
+    end
+
+    -- 检查文件扩展名
+    local ext = file_path:match("%.([^.]+)$")
+    if not ext or ext:lower() ~= "mid" then
+        logger.error(string.format("文件扩展名无效: %s (需要 .mid)", ext or "无扩展名"))
+        return false
+    end
+
+    -- 检查文件是否存在
+    local file = io.open(file_path, "rb")
+    if not file then
+        logger.error(string.format("文件不存在或无读取权限: %s", file_path))
+        return false
+    end
+    file:close()
+
+    return true
+end
+
+-- 静默导入 MIDI 文件（支持带 TimeMap 的 MIDI）
+-- 不会弹出任何对话框
+-- @param file_path: MIDI 文件路径（必须以 .mid 结尾）
+-- @param track: 目标轨道（Track 对象或轨道号）
+-- @param start_time: 起始秒数
+-- @return: true, {item=...} 或 false, {code=..., message=...}
+local function insert_midi_via_pcm(file_path, track, start_time)
+    if not is_valid_midi_file(file_path) then
+        return false, {
+            code = "INVALID_MIDI_FILE",
+            message = string.format("Invalid MIDI file: %s", file_path)
+        }
+    end
+
+    if not track or start_time == nil then
+        logger.error("轨道或起始时间为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "Track and start_time are required"
+        }
+    end
+
+    local track_obj = track
+
+    -- 创建临时 MIDI Item
+    local newItem = reaper.CreateNewMIDIItemInProj(track_obj, start_time, start_time + 1, false)
+    if not newItem then
+        logger.error(string.format("无法创建 MIDI Item: 轨道=%s, 时间=%.3fs", tostring(track), start_time))
+        return false, {
+            code = "ITEM_CREATE_ERROR",
+            message = "Failed to create MIDI item"
+        }
+    end
+
+    -- 关闭循环，防止长度不匹配导致重复
+    reaper.SetMediaItemInfo_Value(newItem, "B_LOOPSRC", 0)
+
+    local take = reaper.GetActiveTake(newItem)
+    if not take then
+        logger.error("无法获取 MIDI Item 的 Take")
+        reaper.DeleteTrackMediaItem(track_obj, newItem)
+        return false, {
+            code = "TAKE_ERROR",
+            message = "Failed to get active take"
+        }
+    end
+
+    -- 从 MIDI 文件加载 PCM Source
+    local pcm_src = reaper.PCM_Source_CreateFromFile(file_path)
+    if not pcm_src then
+        logger.error(string.format("无法加载 MIDI 文件: %s", file_path))
+        reaper.DeleteTrackMediaItem(track_obj, newItem)
+        return false, {
+            code = "FILE_LOAD_ERROR",
+            message = string.format("Failed to load MIDI file: %s", file_path)
+        }
+    end
+
+    -- 设置 Source 到 Take
+    reaper.SetMediaItemTake_Source(take, pcm_src)
+
+    -- 获取 MIDI 实际长度并更新 Item 长度
+    local length, _ = reaper.GetMediaSourceLength(pcm_src)
+    if not length or length <= 0 then
+        logger.error(string.format("无法获取 MIDI 文件长度: %s", file_path))
+        reaper.DeleteTrackMediaItem(track_obj, newItem)
+        return false, {
+            code = "LENGTH_ERROR",
+            message = "Failed to get MIDI file length"
+        }
+    end
+
+    reaper.SetMediaItemInfo_Value(newItem, "D_LENGTH", length)
+    reaper.UpdateArrange()
+
+    logger.info(string.format("MIDI 文件已静默导入: %s (时间:%.3fs, 长度:%.3fs)",
+        file_path, start_time, length))
+
+    return true, { item = newItem, length = length }
+end
+
+----------------------------------------------------------------
 -- API 接口
 ----------------------------------------------------------------
 
@@ -538,20 +648,86 @@ function M.render_seconds(param)
 end
 
 function M.insert_at_measure(param)
-    local pos = time_map.measure_to_second(param.measure or 1)
-    logger.info(string.format("insert_at_measure: measure=%d -> %.3fs", param.measure or 1, pos))
-
-    reaper.SetEditCurPos(pos, false, false)
-    local tr = track_module.find_track(param.track)
-    if tr then
-        reaper.SetOnlyTrackSelected(tr)
-        reaper.InsertMedia(param.file_path, 0)
-        logger.info(string.format("MIDI 插入成功: %s", param.file_path))
-        return true, { success = true }
+    if not param.file_path then
+        logger.error("文件路径为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "file_path is required"
+        }
     end
 
-    logger.error(string.format("轨道未找到: %s", tostring(param.track)))
-    return false, { code = "NOT_FOUND", message = "Track not found" }
+    if not param.track then
+        logger.error("轨道参数为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "track is required"
+        }
+    end
+
+    local measure = param.measure or 1
+    if type(measure) ~= "number" or measure < 1 then
+        logger.error(string.format("小节号无效: %s", tostring(measure)))
+        return false, {
+            code = "INVALID_PARAM",
+            message = "measure must be >= 1"
+        }
+    end
+
+    local start_time = time_map.measure_to_second(measure)
+    logger.info(string.format("insert_at_measure: file=%s, track=%s, measure=%d -> %.3fs",
+        param.file_path, tostring(param.track), measure, start_time))
+
+    local success, result = insert_midi_via_pcm(param.file_path, track_module.find_track(param.track), start_time)
+    if success then
+        return true, {
+            success = true,
+            message = "MIDI imported successfully",
+            length = result.length
+        }
+    else
+        return false, result
+    end
+end
+
+function M.insert_at_second(param)
+    if not param.file_path then
+        logger.error("文件路径为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "file_path is required"
+        }
+    end
+
+    if not param.track then
+        logger.error("轨道参数为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "track is required"
+        }
+    end
+
+    local start_time = param.second or 0
+    if type(start_time) ~= "number" or start_time < 0 then
+        logger.error(string.format("起始时间无效: %s", tostring(start_time)))
+        return false, {
+            code = "INVALID_PARAM",
+            message = "at (start_time) must be a non-negative number"
+        }
+    end
+
+    logger.info(string.format("insert_at_second: file=%s, track=%s, at=%.3fs",
+        param.file_path, tostring(param.track), start_time))
+
+    local success, result = insert_midi_via_pcm(param.file_path, track_module.find_track(param.track), start_time)
+    if success then
+        return true, {
+            success = true,
+            message = "MIDI imported successfully",
+            length = result.length
+        }
+    else
+        return false, result
+    end
 end
 
 return M
