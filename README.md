@@ -24,6 +24,7 @@
 1. [设想](./docs/edit-music.md)
 2. [各大模型能力](./docs/music-model-abilities.md)
 3. [开发任务追踪](./tasks/tasks.md)
+4. [接入 MCP 规范](./docs/mcp/)
 
 
 
