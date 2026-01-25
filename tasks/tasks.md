@@ -35,3 +35,4 @@
 14. [寻找自动作曲大模型](./task014-look-for-lyrics-melody-model.md)
 15. [调研配器分离的音乐模型](task015-look-for-split-stem-models.md)
     调研并挑选出一个优质的 split_stems 的模型: BS-RoFormer
+16. [寻找 lyrics2audio 模型](task016-look-for-lyrics2audio-models.md)
