@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000011_test_set_project_timesig",
+    "ts_ms": 1732854000011,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "project.set_project_timesig",
+    "param": {
+      "bpm": 120,
+      "ts_num": 4,
+      "ts_den": 4
+    }
+  }
+}

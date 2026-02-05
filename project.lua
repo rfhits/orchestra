@@ -87,4 +87,123 @@ function M.get_track_list()
     }
 end
 
+--[[ 
+    设置指定秒数的速度/拍号标记
+    注意：REAPER 通过 Tempo/TimeSig marker 来定义项目的速度与拍号
+--]]
+function M.set_tempo_timesig_at_second(param)
+    if not param then
+        logger.error("参数为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "param is required"
+        }
+    end
+
+    local sec = param.sec
+    if sec == nil then
+        sec = param.second -- 兼容 second 字段
+    end
+
+    if type(sec) ~= "number" or sec < 0 then
+        logger.error(string.format("秒数无效: %s", tostring(sec)))
+        return false, {
+            code = "INVALID_PARAM",
+            message = "sec must be a non-negative number"
+        }
+    end
+
+    local bpm = param.bpm
+    if type(bpm) ~= "number" or bpm <= 0 then
+        logger.error(string.format("BPM 无效: %s", tostring(bpm)))
+        return false, {
+            code = "INVALID_PARAM",
+            message = "bpm must be a positive number"
+        }
+    end
+
+    local ts_num = param.ts_num
+    local ts_den = param.ts_den
+    if ts_num == nil or ts_den == nil then
+        logger.error("时间签名参数缺失")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "ts_num and ts_den are required"
+        }
+    end
+
+    if type(ts_num) ~= "number" or ts_num <= 0 or ts_num % 1 ~= 0 then
+        logger.error(string.format("时间签名分子无效: %s", tostring(ts_num)))
+        return false, {
+            code = "INVALID_PARAM",
+            message = "ts_num must be a positive integer"
+        }
+    end
+
+    if type(ts_den) ~= "number" or ts_den <= 0 or ts_den % 1 ~= 0 then
+        logger.error(string.format("时间签名分母无效: %s", tostring(ts_den)))
+        return false, {
+            code = "INVALID_PARAM",
+            message = "ts_den must be a positive integer"
+        }
+    end
+
+    -- 查找指定时间点是否已有 marker（Find 返回该时间点或之前的 marker）
+    local existing_idx = reaper.FindTempoTimeSigMarker(0, sec)
+    local target_idx = -1
+    if existing_idx >= 0 then
+        local retval, timepos = reaper.GetTempoTimeSigMarker(0, existing_idx)
+        if retval and math.abs(timepos - sec) < 1e-6 then
+            target_idx = existing_idx -- 编辑已有 marker
+        end
+    end
+
+    reaper.Undo_BeginBlock()
+    local ok = reaper.SetTempoTimeSigMarker(0, target_idx, sec, -1, -1, bpm, ts_num, ts_den, false)
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Set Tempo/TimeSig Marker", -1)
+
+    if not ok then
+        logger.error(string.format("设置 Tempo/TimeSig 失败: sec=%.3f, bpm=%.2f, ts=%d/%d",
+            sec, bpm, ts_num, ts_den))
+        return false, {
+            code = "INTERNAL_ERROR",
+            message = "Failed to set tempo/time signature marker"
+        }
+    end
+
+    if target_idx >= 0 then
+        logger.info(string.format("更新 Tempo/TimeSig marker: idx=%d, sec=%.3f, bpm=%.2f, ts=%d/%d",
+            target_idx, sec, bpm, ts_num, ts_den))
+    else
+        logger.info(string.format("插入 Tempo/TimeSig marker: sec=%.3f, bpm=%.2f, ts=%d/%d",
+            sec, bpm, ts_num, ts_den))
+    end
+
+    return true, {
+        success = true,
+        second = sec,
+        bpm = bpm,
+        ts_num = ts_num,
+        ts_den = ts_den
+    }
+end
+
+--[[ 
+    设置项目默认拍号/速度（等价于在 0 秒处设置 Tempo/TimeSig marker）
+--]]
+function M.set_project_timesig(param)
+    if not param then
+        logger.error("参数为空")
+        return false, {
+            code = "INVALID_PARAM",
+            message = "param is required"
+        }
+    end
+
+    -- 复用 set_tempo_timesig_at_second 逻辑，固定 sec=0
+    param.sec = 0
+    return M.set_tempo_timesig_at_second(param)
+end
+
 return M

@@ -98,6 +98,8 @@ function M.run_all_tests()
         { subdir = "project", filename = "project_get_info_test.json" },
         { subdir = "project", filename = "project_get_track_count_test.json" },
         { subdir = "project", filename = "project_get_track_list_test.json" },
+        { subdir = "project", filename = "project_set_tempo_timesig_at_second_test.json" },
+        { subdir = "project", filename = "project_set_project_timesig_test.json" },
         { subdir = "common",  filename = "error_test_invalid_function.json" }
     }
 
@@ -144,6 +146,14 @@ end
 
 function M.test_project_get_track_list()
     M.run_test("project", "project_get_track_list_test.json")
+end
+
+function M.test_project_set_tempo_timesig_at_second()
+    M.run_test("project", "project_set_tempo_timesig_at_second_test.json")
+end
+
+function M.test_project_set_project_timesig()
+    M.run_test("project", "project_set_project_timesig_test.json")
 end
 
 function M.test_error_handling()
@@ -214,9 +224,11 @@ function M.show_menu()
 16. Test Project Info
 17. Test Project Get Track Count
 18. Test Project Get Track List
-19. Test Error Handling
-20. Run All Tests
-21. Exit
+19. Test Project Set Tempo/TimeSig at Second
+20. Test Project Set Project TimeSig
+21. Test Error Handling
+22. Run All Tests
+23. Exit
 ===========================
 ]]
 
@@ -228,7 +240,7 @@ function M.show_menu()
     local user_ok, input_str = reaper.GetUserInputs(
         "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
         1,
-        "Enter Choice (1-21):",                    -- 左侧提示保持简短
+        "Enter Choice (1-23):",                    -- 左侧提示保持简短
         ""
     )
 
@@ -240,8 +252,8 @@ function M.show_menu()
     local choice = tonumber(input_str)
 
     -- 4. 校验逻辑 (保持你的原有逻辑)
-    if not choice or choice < 1 or choice > 21 then
-        reaper.ShowMessageBox("输入无效！请输入1-21之间的数字。", "错误", 0)
+    if not choice or choice < 1 or choice > 23 then
+        reaper.ShowMessageBox("输入无效！请输入1-23之间的数字。", "错误", 0)
         return M.show_menu() -- 递归重新显示
     end
 
@@ -283,10 +295,14 @@ function M.show_menu()
     elseif choice == 18 then
         M.test_project_get_track_list()
     elseif choice == 19 then
-        M.test_error_handling()
+        M.test_project_set_tempo_timesig_at_second()
     elseif choice == 20 then
-        M.run_all_tests()
+        M.test_project_set_project_timesig()
     elseif choice == 21 then
+        M.test_error_handling()
+    elseif choice == 22 then
+        M.run_all_tests()
+    elseif choice == 23 then
         M.info("Test completed.")
     end
 end

@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000010_test_set_tempo_timesig_at_second",
+    "ts_ms": 1732854000010,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "project.set_tempo_timesig_at_second",
+    "param": {
+      "sec": 0,
+      "bpm": 120,
+      "ts_num": 4,
+      "ts_den": 4
+    }
+  }
+}
