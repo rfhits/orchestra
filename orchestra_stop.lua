@@ -17,7 +17,8 @@ local stop_signal_file = config.get_stop_signal_file_path()
 -- 创建停止信号文件
 local file = io.open(stop_signal_file, "w")
 if file then
-    file:write("Orchestra stop requested at " .. os.date())
+    file:write(tostring(os.time()) .. "\n")
+    file:write("Orchestra stop requested at " .. os.date() .. "\n")
     file:close()
     reaper.ShowMessageBox("Orchestra stop signal created.\nThe running instance should stop shortly.", "Orchestra Stop", 0)
 else

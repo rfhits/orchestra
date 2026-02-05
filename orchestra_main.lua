@@ -5,6 +5,7 @@ local M = {}
 local modules = nil
 local is_running = false
 local stop_requested = false
+local start_time = nil
 
 -- 引入配置模块
 local config = require("config")
@@ -13,6 +14,7 @@ local config = require("config")
 function M.start(loaded_modules)
     modules = loaded_modules
     is_running = true
+    start_time = os.time()
 
     M.log("Starting Orchestra Client...")
 
@@ -128,7 +130,22 @@ function M.should_stop()
     local stop_signal_file = config.get_stop_signal_file_path()
     local file = io.open(stop_signal_file, "r")
     if file then
+        local first_line = file:read("*l")
         file:close()
+        local stop_time = tonumber(first_line or "")
+
+        if not stop_time then
+            M.log("Stop signal file invalid timestamp, removing: " .. tostring(stop_signal_file), "warn")
+            os.remove(stop_signal_file)
+            return false
+        end
+
+        if start_time and stop_time < start_time then
+            M.log("Stale stop signal ignored (stop_time < start_time), removing", "warn")
+            os.remove(stop_signal_file)
+            return false
+        end
+
         -- 删除停止信号文件
         os.remove(stop_signal_file)
         return true
