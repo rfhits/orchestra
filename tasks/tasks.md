@@ -1,19 +1,12 @@
 # tasks
 
-## 进行中
-
-mureka API 太贵了，只是做一个 demo，但是他们说可以 talk to sales
-
 ## TODO
 
--   [ ] 将 ACE-step 作为一个独立的服务部署为 MCP，支持 lyrics2audio 调用。
--   [ ] 调研并挑选出一个支持配器的模型（given melody，generate instruments like piano, ...）
-        我忘记 anticipation 是不是支持了
--   [ ] 将 task017 提到的 SOME 和 transkun 部署为服务
--   [ ] 接入自动创作歌词的 Skill，参考 task013
--   [ ] text2midi: 直接从符号角度建模，prompt 到 midi，可以考虑先曲后词，实际很难，因为音乐是有结构的，
-        只能说想要一段曲子可以参考这个模型
-        [Text2midi - a Hugging Face Space by amaai-lab](https://huggingface.co/spaces/amaai-lab/text2midi)
+-   [ ] lyrics2audio 有了更多的模型，看起来有更好的，比如那个[SongBloom](https://cypress-yang.github.io/SongBloom_demo/)
+-   [ ] MT music ldm，配器模型
+-   [ ] Bossa，如果我得到 MIDI 和原来风格不一样，可以做一次迁移
+-   [ ] 评估方法：diffusion based 和重新编曲后的比较，让大家看看哪个好听，vote 以后就行，
+        不需要做成一个产品给别人用
 
 ## 遗留问题
 
@@ -21,15 +14,8 @@ mureka API 太贵了，只是做一个 demo，但是他们说可以 talk to sale
 2. log table 需要 json 打出的 string
 3. logger 打印出来的行号总是 logger.lua 的行号
 4. 给 clean up 绑定一个脚本快捷键
-5. track.create 等 MCP 操作需要设置一个超时时间、以及返回值写到 docstring 中
-6. bridge.call_reaper 目前是轮询，写死了超时时间，不知道会不会有性能问题
-7. 渲染出文件以后，也要移动到 archive 里面
-8. 将 BS-RoFormer 的 MCP 设计为一个支持 task-id, progress query 的形式，这样 agent 就可以去做别的事情了
-   目前还是一个 http 长连接，在 kilo 中设置了一个较长的超时时间来实现不超时  
-   需要设计一个更优雅的方式支持长连接 MCP tool call，同时保留模型驻留显存
-9. BS-RoFormer 可以写一个 Installation.md 作为文档
-10. 目前以下的 MCP 都是以本地文件系统的方式返回任务完成，需要考虑改进成 http 格式
-11.
+5. bridge.call_reaper 目前是轮询，写死了超时时间，不知道会不会有性能问题
+6. 渲染出文件以后，也要移动到 archive 里面
 
 ## 已完成
 
@@ -60,13 +46,17 @@ mureka API 太贵了，只是做一个 demo，但是他们说可以 talk to sale
 22. [将 transkun 封装为 MCP 并接入](./task022-pack-transkun-as-mcp.md)
 23. [将 SOME 封装为 MCP 并接入](./task023-pack-some-as-mcp.md)
 24. [将 Ace-Step 封装为 MCP 并接入](./task024-pack-ace-as-mcp.md)
+25. [将编曲模块封装为 MCP 并接入](./task025-pack-struct-arrange-as-mcp.md)
+26. [封装歌曲分析模块为 MCP](./task026-pack-structure-analyze-as-mcp.md)
+27. [不使用 MCP 跑通一首歌生成流程](./task027-run-full-process-without-mcp/)
+28. [使用 MCP 跑通一首歌流程](./task028-run-full-process-with-mcp-skill.md)
 
 ## 思考
 
 我觉得我们应该做符号主义得路线
 因为就算 AI 可以直出 audio form 的音乐
 对于创作者而言，也需要 的是符号主义的助手。
-只有符号主义才能精确表达一首歌曲
+只有符号主义才能精确渲染一首没有杂音的歌曲
 
 而且 audio 有一个问题，就是它省略了所有音乐编辑过程的细节
 导致音乐不再精细了，变成了一种没有人情感混合的、流水线一样的工具。

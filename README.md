@@ -15,9 +15,8 @@
 ## 软件架构
 
 1. Reaper 宿主脚本模块（Lua 编写），通过文件系统与 Python MCP 通信
-2. 各大音乐音乐模型作为独立实体（Docker/Server/Process），作为一个  MCP server，提供 `model.ability()` 作为调用
+2. 各大音乐模型作为独立实体（Docker/Server/Process）暴露 MCP server，提供 `model.ability()` 作为调用
 3. 添加 Skill，指引大模型（Claude/Gemini）进行工作流创作、辅助功能定义
-
 
 ## 文档
 
@@ -25,6 +24,3 @@
 2. [各大模型能力](./docs/music-model-abilities.md)
 3. [开发任务追踪](./tasks/tasks.md)
 4. [接入 MCP 规范](./docs/mcp/)
-
-
-
