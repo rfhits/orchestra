@@ -608,14 +608,12 @@ local function insert_midi_via_pcm(file_path, track, start_time)
     reaper.SetMediaItemTake_Source(take, pcm_src)
 
     -- 获取 MIDI 实际长度并更新 Item 长度
-    local length, _ = reaper.GetMediaSourceLength(pcm_src)
-    if not length or length <= 0 then
-        logger.error(string.format("无法获取 MIDI 文件长度: %s", file_path))
-        reaper.DeleteTrackMediaItem(track_obj, newItem)
-        return false, {
-            code = "LENGTH_ERROR",
-            message = "Failed to get MIDI file length"
-        }
+    local length, lengthIsQN = reaper.GetMediaSourceLength(pcm_src)
+    logger.info(string.format("lengthIsQN: %s, length=%.3f", tostring(lengthIsQN), length))
+    if lengthIsQN then
+        local start_qn = reaper.TimeMap2_timeToQN(0, start_time)
+        local end_time = reaper.TimeMap2_QNToTime(0, start_qn + length)
+        length = end_time - start_time
     end
 
     reaper.SetMediaItemInfo_Value(newItem, "D_LENGTH", length)
