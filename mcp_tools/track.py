@@ -61,3 +61,20 @@ def get_color(index: int) -> Dict[str, Any]:
         轨道颜色信息，包含一个 rgb 数组，红色是 [255, 0, 0]
     """
     return bridge.call_reaper("track.get_color", {"index": index})
+
+
+def set_parent_as(parent_track: Any, child_track: Any) -> Dict[str, Any]:
+    """
+    设置轨道父子层级关系
+
+    Args:
+        parent_track: 父轨道标识（GUID/名称/索引）
+        child_track: 子轨道标识（GUID/名称/索引）
+
+    Returns:
+        操作结果
+    """
+    return bridge.call_reaper(
+        "track.set_parent_as",
+        {"parent_track": parent_track, "child_track": child_track},
+    )
