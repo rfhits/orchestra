@@ -85,6 +85,7 @@ function M.run_all_tests()
         { subdir = "track",   filename = "track_rename_test.json" },
         { subdir = "track",   filename = "track_set_color_test.json" },
         { subdir = "track",   filename = "track_get_color_test.json" },
+        { subdir = "track",   filename = "track_set_parent_as_test.json" },
         { subdir = "audio",   filename = "audio_insert_test.json" },
         { subdir = "audio",   filename = "audio_insert_at_second_test.json" },
         { subdir = "audio",   filename = "audio_insert_at_measure_test.json" },
@@ -133,6 +134,10 @@ end
 
 function M.test_track_get_color()
     M.run_test("track", "track_get_color_test.json")
+end
+
+function M.test_track_set_parent_as()
+    M.run_test("track", "track_set_parent_as_test.json")
 end
 
 
@@ -211,24 +216,25 @@ function M.show_menu()
 3.  Test Track Rename
 4.  Test Track Set Color
 5.  Test Track Get Color
-6.  Test Audio Insert
-7.  Test Audio Insert at Second
-8.  Test Audio Insert at Measure
-9.  Test Audio Render Seconds
-10. Test Audio Render Measures
-11. Test MIDI Render Seconds
-12. Test MIDI Render Measures
-13. Test MIDI Insert at Second
-14. Test MIDI Insert at Measure
-15. Test MIDI Insert Named Track
-16. Test Project Info
-17. Test Project Get Track Count
-18. Test Project Get Track List
-19. Test Project Set Tempo/TimeSig at Second
-20. Test Project Set Project TimeSig
-21. Test Error Handling
-22. Run All Tests
-23. Exit
+6.  Test Track Set Parent
+7.  Test Audio Insert
+8.  Test Audio Insert at Second
+9.  Test Audio Insert at Measure
+10. Test Audio Render Seconds
+11. Test Audio Render Measures
+12. Test MIDI Render Seconds
+13. Test MIDI Render Measures
+14. Test MIDI Insert at Second
+15. Test MIDI Insert at Measure
+16. Test MIDI Insert Named Track
+17. Test Project Info
+18. Test Project Get Track Count
+19. Test Project Get Track List
+20. Test Project Set Tempo/TimeSig at Second
+21. Test Project Set Project TimeSig
+22. Test Error Handling
+23. Run All Tests
+24. Exit
 ===========================
 ]]
 
@@ -240,7 +246,7 @@ function M.show_menu()
     local user_ok, input_str = reaper.GetUserInputs(
         "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
         1,
-        "Enter Choice (1-23):",                    -- 左侧提示保持简短
+        "Enter Choice (1-24):",                    -- 左侧提示保持简短
         ""
     )
 
@@ -252,8 +258,8 @@ function M.show_menu()
     local choice = tonumber(input_str)
 
     -- 4. 校验逻辑 (保持你的原有逻辑)
-    if not choice or choice < 1 or choice > 23 then
-        reaper.ShowMessageBox("输入无效！请输入1-23之间的数字。", "错误", 0)
+    if not choice or choice < 1 or choice > 24 then
+        reaper.ShowMessageBox("输入无效！请输入1-24之间的数字。", "错误", 0)
         return M.show_menu() -- 递归重新显示
     end
 
@@ -269,40 +275,42 @@ function M.show_menu()
     elseif choice == 5 then
         M.test_track_get_color()
     elseif choice == 6 then
-        M.test_audio_insert()
+        M.test_track_set_parent_as()
     elseif choice == 7 then
-        M.test_audio_insert_at_second()
+        M.test_audio_insert()
     elseif choice == 8 then
-        M.test_audio_insert_at_measure()
+        M.test_audio_insert_at_second()
     elseif choice == 9 then
-        M.test_audio_render_seconds()
+        M.test_audio_insert_at_measure()
     elseif choice == 10 then
-        M.test_audio_render_measures()
+        M.test_audio_render_seconds()
     elseif choice == 11 then
-        M.test_midi_render_seconds()
+        M.test_audio_render_measures()
     elseif choice == 12 then
-        M.test_midi_render_measures()
+        M.test_midi_render_seconds()
     elseif choice == 13 then
-        M.test_midi_insert_at_second()
+        M.test_midi_render_measures()
     elseif choice == 14 then
-        M.test_midi_insert_at_measure()
+        M.test_midi_insert_at_second()
     elseif choice == 15 then
-        M.test_midi_insert_named_track()
+        M.test_midi_insert_at_measure()
     elseif choice == 16 then
-        M.test_project_info()
+        M.test_midi_insert_named_track()
     elseif choice == 17 then
-        M.test_project_get_track_count()
+        M.test_project_info()
     elseif choice == 18 then
-        M.test_project_get_track_list()
+        M.test_project_get_track_count()
     elseif choice == 19 then
-        M.test_project_set_tempo_timesig_at_second()
+        M.test_project_get_track_list()
     elseif choice == 20 then
-        M.test_project_set_project_timesig()
+        M.test_project_set_tempo_timesig_at_second()
     elseif choice == 21 then
-        M.test_error_handling()
+        M.test_project_set_project_timesig()
     elseif choice == 22 then
-        M.run_all_tests()
+        M.test_error_handling()
     elseif choice == 23 then
+        M.run_all_tests()
+    elseif choice == 24 then
         M.info("Test completed.")
     end
 end

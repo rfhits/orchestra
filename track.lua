@@ -166,6 +166,129 @@ function M.find_track(track_identifier)
     return nil
 end
 
+function M.set_parent_as(param)
+    if not param then
+        logger.error("参数不能为空")
+        return false, { code = "INVALID_PARAM", message = "Param is nil" }
+    end
+
+    local parent_identifier = param.parent_track
+    local child_identifier = param.child_track
+
+    if parent_identifier == nil or parent_identifier == "" then
+        logger.error("父轨道标识不能为空")
+        return false, { code = "INVALID_PARAM", message = "Parent track identifier is empty" }
+    end
+
+    if child_identifier == nil or child_identifier == "" then
+        logger.error("子轨道标识不能为空")
+        return false, { code = "INVALID_PARAM", message = "Child track identifier is empty" }
+    end
+
+    local parent_track = M.find_track(parent_identifier)
+    if not parent_track then
+        logger.error("父轨道不存在: " .. tostring(parent_identifier))
+        return false, { code = "NOT_FOUND", message = "Parent track not found: " .. tostring(parent_identifier) }
+    end
+
+    local child_track = M.find_track(child_identifier)
+    if not child_track then
+        logger.error("子轨道不存在: " .. tostring(child_identifier))
+        return false, { code = "NOT_FOUND", message = "Child track not found: " .. tostring(child_identifier) }
+    end
+
+    if parent_track == child_track then
+        logger.error("父轨道和子轨道不能相同")
+        return false, { code = "INVALID_PARAM", message = "Parent and child tracks are the same" }
+    end
+
+    local parent_guid = reaper.GetTrackGUID(parent_track)
+    local child_guid = reaper.GetTrackGUID(child_track)
+
+    local current_parent = reaper.GetParentTrack(child_track)
+    if current_parent and current_parent == parent_track then
+        return true, {
+            parent_track_guid = parent_guid,
+            child_track_guid = child_guid,
+            already_parent = true
+        }
+    end
+
+    local parent_track_number = reaper.GetMediaTrackInfo_Value(parent_track, "IP_TRACKNUMBER")
+    local child_track_number = reaper.GetMediaTrackInfo_Value(child_track, "IP_TRACKNUMBER")
+    if not parent_track_number or parent_track_number <= 0 then
+        logger.error("父轨道索引无效: " .. tostring(parent_track_number))
+        return false, { code = "INTERNAL_ERROR", message = "Invalid parent track index" }
+    end
+    if not child_track_number or child_track_number <= 0 then
+        logger.error("子轨道索引无效: " .. tostring(child_track_number))
+        return false, { code = "INTERNAL_ERROR", message = "Invalid child track index" }
+    end
+
+    local parent_index = math.floor(parent_track_number) - 1
+    local child_index = math.floor(child_track_number) - 1
+
+    local before_index
+    if child_index < parent_index then
+        before_index = parent_index
+    else
+        before_index = parent_index + 1
+    end
+
+    local track_count = reaper.CountTracks(0)
+    if before_index < 0 then before_index = 0 end
+    if before_index > track_count then before_index = track_count end
+
+    local parent_folder_depth = reaper.GetMediaTrackInfo_Value(parent_track, "I_FOLDERDEPTH")
+    local make_prev_folder = 1
+    if parent_folder_depth < 0 then
+        make_prev_folder = 2
+    end
+
+    local selected_tracks = {}
+    local selected_count = reaper.CountSelectedTracks(0)
+    for i = 0, selected_count - 1 do
+        selected_tracks[#selected_tracks + 1] = reaper.GetSelectedTrack(0, i)
+    end
+
+    reaper.Undo_BeginBlock()
+    reaper.Main_OnCommand(40297, 0) -- Unselect all tracks
+    reaper.SetOnlyTrackSelected(child_track)
+
+    local moved_ok = reaper.ReorderSelectedTracks(before_index, make_prev_folder)
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Set Track Parent", -1)
+
+    reaper.Main_OnCommand(40297, 0)
+    for _, track in ipairs(selected_tracks) do
+        if track then
+            reaper.SetTrackSelected(track, true)
+        end
+    end
+
+    if not moved_ok then
+        logger.error("设置父子关系失败: ReorderSelectedTracks 返回 false")
+        return false, { code = "INTERNAL_ERROR", message = "ReorderSelectedTracks failed" }
+    end
+
+    local new_parent = reaper.GetParentTrack(child_track)
+    if not new_parent or new_parent ~= parent_track then
+        logger.error("设置父子关系失败: 父轨道不匹配")
+        return false, { code = "INTERNAL_ERROR", message = "Failed to set parent track" }
+    end
+
+    logger.info("设置父子轨道成功: 父 " .. parent_guid .. " -> 子 " .. child_guid)
+
+    return true, {
+        parent_track_guid = parent_guid,
+        child_track_guid = child_guid,
+        moved = true,
+        already_parent = false,
+        before_index = before_index,
+        make_prev_folder = make_prev_folder
+    }
+end
+
 function M.rename(param)
     local track_index = param.index
     local new_name = param.name or ""

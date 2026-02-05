@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000000_track_set_parent_as_test",
+    "ts_ms": 1732854000000,
+    "agent_id": "claude"
+  },
+  "request": {
+    "func": "track.set_parent_as",
+    "param": {
+      "parent_track": 0,
+      "child_track": 1
+    }
+  }
+}
