@@ -1,9 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "orchestra"
+name = "reaper-orchestra"
 version = "0.1.0"
-description = "Add your description here"
+description = "Orchestra MCP server for REAPER"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.10"
 dependencies = [
-    "mcp>=1.25.0",
+    "mcp[server]>=1.25.0",
 ]
+
+[project.scripts]
+orch = "cli:main"
+orchestra = "cli:main"
+
+[tool.setuptools]
+py-modules = ["server", "cli", "mcp_bridge"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mcp_tools", "reaper_scripts"]
+
+[tool.setuptools.package-data]
+reaper_scripts = ["**/*"]

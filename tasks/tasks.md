@@ -50,6 +50,8 @@
 26. [封装歌曲分析模块为 MCP](./task026-pack-structure-analyze-as-mcp.md)
 27. [不使用 MCP 跑通一首歌生成流程](./task027-run-full-process-without-mcp/)
 28. [使用 MCP 跑通一首歌流程](./task028-run-full-process-with-mcp-skill.md)
+29. [支持 track set parent](./task029-track-set-parent-as.md)
+30. [重构为支持发布到 PyPI 的结构](./task030-ref-as-pypi-package.md)
 
 ## 思考
 

@@ -14,14 +14,10 @@ import inspect
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 
-# 1. 确保 mcp_tools 能被导入
-# 将当前脚本所在目录加入 sys.path
 CURRENT_DIR = Path(__file__).parent
-if str(CURRENT_DIR) not in sys.path:
-    sys.path.insert(0, str(CURRENT_DIR))
 
 # 创建 FastMCP 实例
-mcp = FastMCP("orchestra-reaper")
+mcp = FastMCP("reaper-orchestra")
 
 def register_all_tools():
     """
@@ -64,6 +60,9 @@ def register_all_tools():
         except Exception as e:
             print(f"[Error] 加载模块 {module_name} 失败: {e}", file=sys.stderr)
 
-if __name__ == "__main__":
+def main():
     register_all_tools()
     mcp.run()
+
+if __name__ == "__main__":
+    main()
