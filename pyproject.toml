@@ -8,9 +8,17 @@ version = "0.1.0"
 description = "Orchestra MCP server for REAPER"
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "mcp[server]>=1.25.0",
+dependencies = ["mcp>=1.25.0"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
 ]
+
+[project.urls]
+Homepage = "https://github.com/rfhits/orchestra"
+Repository = "https://github.com/rfhits/orchestra"
 
 [project.scripts]
 orch = "cli:main"
@@ -24,4 +32,7 @@ where = ["."]
 include = ["mcp_tools", "reaper_scripts"]
 
 [tool.setuptools.package-data]
-reaper_scripts = ["**/*"]
+"reaper_scripts" = ["./**"]
+
+[dependency-groups]
+dev = ["build>=1.4.0", "twine>=6.2.0"]

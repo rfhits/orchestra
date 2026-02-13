@@ -1,6 +1,12 @@
+/.venv
+/build/
+/dist/
+*.egg-info/
+
+
 .VSCodeCounter/
 .kilocode/
 .vscode/
-__pychache__/
+__pycache__/
 *.pyc
 /models/**
