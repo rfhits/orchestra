@@ -255,8 +255,7 @@ def insert_at_second(
         {
             "success": true,
             "message": "MIDI imported successfully",
-            "length": 3.5,  # 导入的 MIDI 文件时长（秒）
-            "item": {...}  # 创建的 Media Item 对象
+            "length": 3.5  # 导入的 MIDI 文件时长（秒）
         }
 
     Raises:
@@ -352,9 +351,7 @@ def insert_at_measure(
         {
             "success": true,
             "message": "MIDI imported successfully",
-            "length": 4.0,  # 导入的 MIDI 文件时长（秒）
-            "measure": 1,  # 导入的小节号
-            "position": 0.0  # 对应的秒数位置
+            "length": 4.0  # 导入的 MIDI 文件时长（秒）
         }
 
     Raises:
@@ -422,7 +419,7 @@ def insert_at_measure(
                 track="Composition",
                 measure=measure_pos
             )
-            print(f"导入 {clip} 到第 {measure_pos} 小节 ({result['position']}s)")
+            print(f"导入 {clip} 到第 {measure_pos} 小节，长度 {result['length']}s")
     """
     return bridge.call_reaper(
         "midi.insert_at_measure",

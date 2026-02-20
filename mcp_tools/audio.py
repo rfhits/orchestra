@@ -36,7 +36,7 @@ def render_seconds(
     Returns:
         dict: 渲染结果
         {
-            "path": "/full/path/to/rendered_file.wav"  # 输出文件完整路径
+            "file_path": "/full/path/to/rendered_file.wav"  # 输出文件完整路径
         }
 
     Raises:
@@ -45,7 +45,7 @@ def render_seconds(
     Examples:
         # 基本用法：渲染全部轨道的前 10 秒
         result = render_seconds()
-        print(result["path"])  # /path/to/file.wav
+        print(result["file_path"])  # /path/to/file.wav
 
         # 渲染特定轨道：从 5 秒处开始，渲染 8 秒
         result = render_seconds(
@@ -107,7 +107,7 @@ def render_measures(
     Returns:
         dict: 渲染结果
         {
-            "path": "/full/path/to/rendered_file.wav"  # 输出文件完整路径
+            "file_path": "/full/path/to/rendered_file.wav"  # 输出文件完整路径
         }
 
     Raises:
@@ -116,7 +116,7 @@ def render_measures(
     Examples:
         # 基本用法：渲染第 1 小节
         result = render_measures()
-        print(result["path"])
+        print(result["file_path"])
 
         # 渲染指定小节范围：第 2-5 小节
         result = render_measures(
