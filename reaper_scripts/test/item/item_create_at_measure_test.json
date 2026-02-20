@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600002_item_create_at_measure_test",
+    "ts_ms": 1732854600002,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "item.create_at_measure",
+    "param": {
+      "track": "5",
+      "measure": 5.0,
+      "length": 1.0
+    }
+  }
+}

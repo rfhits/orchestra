@@ -48,6 +48,8 @@ local function load_orchestra_modules()
         "logger",
         "config",
         "time_map",
+        "item",
+        "take",
         "track",
         "project",
         "audio",

@@ -49,6 +49,14 @@ function M.start(loaded_modules)
         modules.midi.init(modules.logger)
     end
 
+    if modules.item and modules.logger then
+        modules.item.init(modules.logger)
+    end
+
+    if modules.take and modules.logger then
+        modules.take.init(modules.logger)
+    end
+
 
     if modules.track and modules.logger then
         modules.track.init(modules.logger)

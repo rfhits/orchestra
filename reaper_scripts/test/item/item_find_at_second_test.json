@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600005_item_find_at_second_test",
+    "ts_ms": 1732854600005,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "item.find_at_second",
+    "param": {
+      "track": "0",
+      "second": 12.0,
+      "match_mode": "cover",
+      "include_takes": false
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600003_item_list_by_track_test",
+    "ts_ms": 1732854600003,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "item.list_by_track",
+    "param": {
+      "track": "4",
+      "include_takes": false
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600006_item_find_at_measure_test",
+    "ts_ms": 1732854600006,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "item.find_at_measure",
+    "param": {
+      "track": "Test Piano Track",
+      "measure": 5.0,
+      "match_mode": "cover",
+      "include_takes": false
+    }
+  }
+}
