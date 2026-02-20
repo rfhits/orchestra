@@ -38,6 +38,28 @@ def get_track_list() -> Dict[str, Any]:
     return bridge.call_reaper("project.get_track_list", {})
 
 
+def get_selection_info() -> Dict[str, Any]:
+    """
+    获取当前选择信息（item/track/上下文）
+
+    返回当前工程里的选择状态，适合 agent 在执行编辑操作前先读取。
+    即使当前没有选中 item 或 track，也会返回空列表（ok=true）。
+
+    Returns:
+        dict: 选择信息，包含：
+            - selection.context（cursor context、time selection 等）
+            - selection.items（选中的 item 列表）
+            - selection.tracks（选中的 track 列表）
+            - selection.item_count / selection.track_count
+
+    Examples:
+        result = get_selection_info()
+        info = result["result"]["selection"]
+        print(info["item_count"], info["track_count"])
+    """
+    return bridge.call_reaper("project.get_selection_info", {})
+
+
 def set_tempo_timesig_at_second(
     sec: float,
     bpm: float,

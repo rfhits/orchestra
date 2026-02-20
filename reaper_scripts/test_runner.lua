@@ -108,6 +108,10 @@ function M.run_all_tests()
         { subdir = "project", filename = "project_get_info_test.json" },
         { subdir = "project", filename = "project_get_track_count_test.json" },
         { subdir = "project", filename = "project_get_track_list_test.json" },
+        { subdir = "project", filename = "project_get_selection_info_test.json" },
+        { subdir = "project", filename = "project_get_selection_info_empty_test.json" },
+        { subdir = "project", filename = "project_get_selection_info_multi_item_test.json" },
+        { subdir = "project", filename = "project_get_selection_info_multi_track_test.json" },
         { subdir = "project", filename = "project_set_tempo_timesig_at_second_test.json" },
         { subdir = "project", filename = "project_set_project_timesig_test.json" },
         { subdir = "common",  filename = "error_test_invalid_function.json" }
@@ -185,7 +189,6 @@ function M.test_take_add_at_measure_cover_or_create()
     M.run_test("take", "take_add_at_measure_cover_or_create_test.json")
 end
 
-
 function M.test_project_info()
     M.run_test("project", "project_get_info_test.json")
 end
@@ -196,6 +199,22 @@ end
 
 function M.test_project_get_track_list()
     M.run_test("project", "project_get_track_list_test.json")
+end
+
+function M.test_project_get_selection_info()
+    M.run_test("project", "project_get_selection_info_test.json")
+end
+
+function M.test_project_get_selection_info_empty()
+    M.run_test("project", "project_get_selection_info_empty_test.json")
+end
+
+function M.test_project_get_selection_info_multi_item()
+    M.run_test("project", "project_get_selection_info_multi_item_test.json")
+end
+
+function M.test_project_get_selection_info_multi_track()
+    M.run_test("project", "project_get_selection_info_multi_track_test.json")
 end
 
 function M.test_project_set_tempo_timesig_at_second()
@@ -284,11 +303,15 @@ function M.show_menu()
 26. Test Project Info
 27. Test Project Get Track Count
 28. Test Project Get Track List
-29. Test Project Set Tempo/TimeSig at Second
-30. Test Project Set Project TimeSig
-31. Test Error Handling
-32. Run All Tests
-33. Exit
+29. Test Project Get Selection Info
+30. Test Project Get Selection Info (Empty)
+31. Test Project Get Selection Info (Multi Item)
+32. Test Project Get Selection Info (Multi Track)
+33. Test Project Set Tempo/TimeSig at Second
+34. Test Project Set Project TimeSig
+35. Test Error Handling
+36. Run All Tests
+37. Exit
 ===========================
 ]]
 
@@ -300,7 +323,7 @@ function M.show_menu()
     local user_ok, input_str = reaper.GetUserInputs(
         "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
         1,
-        "Enter Choice (1-33):",                    -- 左侧提示保持简短
+        "Enter Choice (1-37):",                    -- 左侧提示保持简短
         ""
     )
 
@@ -312,8 +335,8 @@ function M.show_menu()
     local choice = tonumber(input_str)
 
     -- 4. 校验逻辑 (保持你的原有逻辑)
-    if not choice or choice < 1 or choice > 33 then
-        reaper.ShowMessageBox("输入无效！请输入1-33之间的数字。", "错误", 0)
+    if not choice or choice < 1 or choice > 37 then
+        reaper.ShowMessageBox("输入无效！请输入1-37之间的数字。", "错误", 0)
         return M.show_menu() -- 递归重新显示
     end
 
@@ -375,14 +398,22 @@ function M.show_menu()
     elseif choice == 28 then
         M.test_project_get_track_list()
     elseif choice == 29 then
-        M.test_project_set_tempo_timesig_at_second()
+        M.test_project_get_selection_info()
     elseif choice == 30 then
-        M.test_project_set_project_timesig()
+        M.test_project_get_selection_info_empty()
     elseif choice == 31 then
-        M.test_error_handling()
+        M.test_project_get_selection_info_multi_item()
     elseif choice == 32 then
-        M.run_all_tests()
+        M.test_project_get_selection_info_multi_track()
     elseif choice == 33 then
+        M.test_project_set_tempo_timesig_at_second()
+    elseif choice == 34 then
+        M.test_project_set_project_timesig()
+    elseif choice == 35 then
+        M.test_error_handling()
+    elseif choice == 36 then
+        M.run_all_tests()
+    elseif choice == 37 then
         M.info("Test completed.")
     end
 end
