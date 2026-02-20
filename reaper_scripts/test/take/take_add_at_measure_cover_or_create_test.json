@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600013_take_add_at_measure_cover_or_create_test",
+    "ts_ms": 1732854600013,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "take.add_at_measure",
+    "param": {
+      "track": "Test Piano Track",
+      "measure": 5.0,
+      "item_match_mode": "cover_or_create",
+      "files": [
+        "C:\\Users\\rfntts\\AppData\\Roaming\\REAPER\\Scripts\\orchestra\\reaper_scripts\\test\\midi\\01_piano.mid"
+      ],
+      "names": [
+        "measure_cover_candidate"
+      ],
+      "set_active": 0
+    }
+  }
+}

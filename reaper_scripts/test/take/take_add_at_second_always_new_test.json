@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600012_take_add_at_second_always_new_test",
+    "ts_ms": 1732854600012,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "take.add_at_second",
+    "param": {
+      "track": "3",
+      "second": 12.0,
+      "item_match_mode": "always_new",
+      "files": [
+        "C:\\Users\\rfntts\\AppData\\Roaming\\REAPER\\Scripts\\orchestra\\reaper_scripts\\test\\midi\\01_piano.mid"
+      ],
+      "names": [
+        "always_new_candidate"
+      ],
+      "set_active": 0
+    }
+  }
+}
