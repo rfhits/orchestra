@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000102_test_marker_update",
+    "ts_ms": 1732854000102,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "marker.update",
+    "param": {
+      "marker_id": 1,
+      "desc": "Verse A"
+    }
+  }
+}

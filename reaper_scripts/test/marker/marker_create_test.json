@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000100_test_marker_create",
+    "ts_ms": 1732854000100,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "marker.create",
+    "param": {
+      "time": 9.0,
+      "desc": "chorus"
+    }
+  }
+}

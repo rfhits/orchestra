@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000103_test_marker_delete",
+    "ts_ms": 1732854000103,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "marker.delete",
+    "param": {
+      "marker_id": 1
+    }
+  }
+}

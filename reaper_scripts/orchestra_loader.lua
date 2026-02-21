@@ -50,6 +50,7 @@ local function load_orchestra_modules()
         "time_map",
         "item",
         "take",
+        "marker",
         "track",
         "project",
         "audio",

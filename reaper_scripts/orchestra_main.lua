@@ -57,6 +57,10 @@ function M.start(loaded_modules)
         modules.take.init(modules.logger)
     end
 
+    if modules.marker and modules.logger then
+        modules.marker.init(modules.logger)
+    end
+
 
     if modules.track and modules.logger then
         modules.track.init(modules.logger)

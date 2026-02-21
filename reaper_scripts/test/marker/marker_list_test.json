@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000101_test_marker_list",
+    "ts_ms": 1732854000101,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "marker.list",
+    "param": {}
+  }
+}

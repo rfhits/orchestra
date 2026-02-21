@@ -7,6 +7,7 @@
 -   [ ] Bossa，如果我得到 MIDI 和原来风格不一样，可以做一次迁移
 -   [ ] 评估方法：diffusion based 和重新编曲后的比较，让大家看看哪个好听，vote 以后就行，
         不需要做成一个产品给别人用
+-   [ ] [task035: 增加 REAPER marker CRUD](./task035-marker-crud.md)
 
 ## 遗留问题
 
@@ -16,6 +17,13 @@
 4. 给 clean up 绑定一个脚本快捷键
 5. bridge.call_reaper 目前是轮询，写死了超时时间，不知道会不会有性能问题
 6. 渲染出文件以后，也要移动到 archive 里面
+7. `midi.render_seconds` / `midi.render_measures` 存在错误传播风险（返回值层级被“吞掉”）
+   - 现状：函数写法是 `return true, perform_midi_render(...)`，当底层返回 `false, {code, message}` 时，dispatcher 可能把外层 `true` 当作成功，内部错误信息丢失
+   - 影响：调用方收到“成功外观”但拿不到有效结果，排障困难
+   - 触发方式（边界场景）：
+     1) 构造 `perform_midi_render` 会失败的工程（如 TempoMap 异常导致 `collect_tempo_map` 返回失败）
+     2) 调用 `midi.render_seconds` 或 `midi.render_measures`
+     3) 观察回包：可能出现 `ok=true` 但 `result` 异常（或缺失具体错误码）的情况
 
 ## 已完成
 

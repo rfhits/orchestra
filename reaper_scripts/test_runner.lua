@@ -114,6 +114,10 @@ function M.run_all_tests()
         { subdir = "project", filename = "project_get_selection_info_multi_track_test.json" },
         { subdir = "project", filename = "project_set_tempo_timesig_at_second_test.json" },
         { subdir = "project", filename = "project_set_project_timesig_test.json" },
+        { subdir = "marker",  filename = "marker_create_test.json" },
+        { subdir = "marker",  filename = "marker_list_test.json" },
+        { subdir = "marker",  filename = "marker_update_test.json" },
+        { subdir = "marker",  filename = "marker_delete_test.json" },
         { subdir = "common",  filename = "error_test_invalid_function.json" }
     }
 
@@ -225,6 +229,22 @@ function M.test_project_set_project_timesig()
     M.run_test("project", "project_set_project_timesig_test.json")
 end
 
+function M.test_marker_create()
+    M.run_test("marker", "marker_create_test.json")
+end
+
+function M.test_marker_list()
+    M.run_test("marker", "marker_list_test.json")
+end
+
+function M.test_marker_update()
+    M.run_test("marker", "marker_update_test.json")
+end
+
+function M.test_marker_delete()
+    M.run_test("marker", "marker_delete_test.json")
+end
+
 function M.test_error_handling()
     M.run_test("common", "error_test_invalid_function.json")
 end
@@ -309,9 +329,13 @@ function M.show_menu()
 32. Test Project Get Selection Info (Multi Track)
 33. Test Project Set Tempo/TimeSig at Second
 34. Test Project Set Project TimeSig
-35. Test Error Handling
-36. Run All Tests
-37. Exit
+35. Test Marker Create
+36. Test Marker List
+37. Test Marker Update
+38. Test Marker Delete
+39. Test Error Handling
+40. Run All Tests
+41. Exit
 ===========================
 ]]
 
@@ -323,7 +347,7 @@ function M.show_menu()
     local user_ok, input_str = reaper.GetUserInputs(
         "Orchestra Test (Check Console for Menu)", -- 标题提醒看控制台
         1,
-        "Enter Choice (1-37):",                    -- 左侧提示保持简短
+        "Enter Choice (1-41):",                    -- 左侧提示保持简短
         ""
     )
 
@@ -335,8 +359,8 @@ function M.show_menu()
     local choice = tonumber(input_str)
 
     -- 4. 校验逻辑 (保持你的原有逻辑)
-    if not choice or choice < 1 or choice > 37 then
-        reaper.ShowMessageBox("输入无效！请输入1-37之间的数字。", "错误", 0)
+    if not choice or choice < 1 or choice > 41 then
+        reaper.ShowMessageBox("输入无效！请输入1-41之间的数字。", "错误", 0)
         return M.show_menu() -- 递归重新显示
     end
 
@@ -410,10 +434,18 @@ function M.show_menu()
     elseif choice == 34 then
         M.test_project_set_project_timesig()
     elseif choice == 35 then
-        M.test_error_handling()
+        M.test_marker_create()
     elseif choice == 36 then
-        M.run_all_tests()
+        M.test_marker_list()
     elseif choice == 37 then
+        M.test_marker_update()
+    elseif choice == 38 then
+        M.test_marker_delete()
+    elseif choice == 39 then
+        M.test_error_handling()
+    elseif choice == 40 then
+        M.run_all_tests()
+    elseif choice == 41 then
         M.info("Test completed.")
     end
 end
