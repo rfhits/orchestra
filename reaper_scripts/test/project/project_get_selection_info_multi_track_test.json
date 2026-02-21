@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000013_project_get_selection_info_multi_track_test",
+    "ts_ms": 1732854000013,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "project.get_selection_info",
+    "param": {}
+  }
+}
