@@ -206,6 +206,31 @@ local function is_match_mode_valid(match_mode)
         match_mode == "always_new"
 end
 
+local function is_finite_number(value)
+    return type(value) == "number" and value == value and value ~= math.huge and value ~= -math.huge
+end
+
+local function capture_selected_items()
+    local selected = {}
+    local selected_count = reaper.CountSelectedMediaItems(0)
+    for i = 0, selected_count - 1 do
+        local item = reaper.GetSelectedMediaItem(0, i)
+        if item then
+            table.insert(selected, item)
+        end
+    end
+    return selected
+end
+
+local function restore_selected_items(selected_items)
+    reaper.Main_OnCommand(40289, 0) -- Item: Unselect all items
+    for _, item in ipairs(selected_items or {}) do
+        if reaper.ValidatePtr(item, "MediaItem*") then
+            reaper.SetMediaItemSelected(item, true)
+        end
+    end
+end
+
 function M._find_item_by_guid(item_guid)
     return find_item_by_guid(item_guid)
 end
@@ -445,6 +470,246 @@ function M.set_length(param)
     reaper.Undo_EndBlock("Set Media Item Length", -1)
 
     return true, { item_guid = param.item_guid, item_length = length }
+end
+
+function M.split(param)
+    if not param or not param.item_guid then
+        return false, { code = "INVALID_PARAM", message = "item_guid is required" }
+    end
+
+    if type(param.item_guid) ~= "string" or param.item_guid == "" then
+        return false, { code = "INVALID_PARAM", message = "item_guid must be a non-empty string" }
+    end
+
+    local times = param.times
+    if type(times) ~= "table" or #times == 0 then
+        return false, { code = "INVALID_PARAM", message = "times must be a non-empty array" }
+    end
+
+    local item = find_item_by_guid(param.item_guid)
+    if not item then
+        return false, { code = "NOT_FOUND", message = "Item not found: " .. tostring(param.item_guid) }
+    end
+
+    local start_sec = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+    local length_sec = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+    local end_sec = start_sec + length_sec
+
+    local split_times = {}
+    local prev = nil
+    for i, t in ipairs(times) do
+        if not is_finite_number(t) then
+            return false, { code = "INVALID_PARAM", message = "times[" .. tostring(i) .. "] must be a finite number" }
+        end
+        if t <= start_sec + EPS or t >= end_sec - EPS then
+            return false, {
+                code = "INVALID_PARAM",
+                message = "times[" .. tostring(i) .. "] must be strictly inside item range"
+            }
+        end
+        if prev and t <= prev + EPS then
+            return false, { code = "INVALID_PARAM", message = "times must be strictly increasing" }
+        end
+        table.insert(split_times, t)
+        prev = t
+    end
+
+    reaper.Undo_BeginBlock()
+    local segments = {}
+    local current = item
+    local split_err = nil
+
+    for _, t in ipairs(split_times) do
+        local right_item = reaper.SplitMediaItem(current, t)
+        if not right_item then
+            split_err = "Failed to split item at " .. tostring(t)
+            break
+        end
+        table.insert(segments, current)
+        current = right_item
+    end
+
+    if not split_err and current then
+        table.insert(segments, current)
+    end
+
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Split Media Item", -1)
+
+    if split_err then
+        return false, { code = "INTERNAL_ERROR", message = split_err }
+    end
+
+    local result_items = {}
+    for _, seg in ipairs(segments) do
+        if not reaper.ValidatePtr(seg, "MediaItem*") then
+            return false, { code = "INTERNAL_ERROR", message = "Split produced invalid media item" }
+        end
+        table.insert(result_items, build_item_summary(seg, false))
+    end
+
+    table.sort(result_items, function(a, b)
+        return a.position_sec < b.position_sec
+    end)
+
+    return true, {
+        source_item_guid = param.item_guid,
+        split_times = split_times,
+        items = result_items,
+        count = #result_items
+    }
+end
+
+function M.merge(param)
+    if not param or type(param.item_guids) ~= "table" then
+        return false, { code = "INVALID_PARAM", message = "item_guids is required" }
+    end
+
+    if #param.item_guids < 2 then
+        return false, { code = "INVALID_PARAM", message = "item_guids must contain at least 2 GUIDs" }
+    end
+
+    local seen = {}
+    local entries = {}
+    local track_obj = nil
+
+    for i, item_guid in ipairs(param.item_guids) do
+        if type(item_guid) ~= "string" or item_guid == "" then
+            return false, { code = "INVALID_PARAM", message = "item_guids[" .. tostring(i) .. "] must be a non-empty string" }
+        end
+        if seen[item_guid] then
+            return false, { code = "INVALID_PARAM", message = "Duplicate item GUID: " .. item_guid }
+        end
+        seen[item_guid] = true
+
+        local item = find_item_by_guid(item_guid)
+        if not item then
+            return false, { code = "NOT_FOUND", message = "Item not found: " .. item_guid }
+        end
+
+        local item_track = reaper.GetMediaItem_Track(item)
+        if not track_obj then
+            track_obj = item_track
+        elseif item_track ~= track_obj then
+            return false, { code = "INVALID_PARAM", message = "All items must be on the same track" }
+        end
+
+        local start_sec = reaper.GetMediaItemInfo_Value(item, "D_POSITION")
+        local length_sec = reaper.GetMediaItemInfo_Value(item, "D_LENGTH")
+
+        table.insert(entries, {
+            guid = item_guid,
+            item = item,
+            start_sec = start_sec,
+            end_sec = start_sec + length_sec
+        })
+    end
+
+    table.sort(entries, function(a, b)
+        if math.abs(a.start_sec - b.start_sec) <= EPS then
+            return a.end_sec < b.end_sec
+        end
+        return a.start_sec < b.start_sec
+    end)
+
+    local merged_end = entries[1].end_sec
+    for i = 2, #entries do
+        local next_entry = entries[i]
+        if next_entry.start_sec > merged_end + EPS then
+            return false, {
+                code = "INVALID_PARAM",
+                message = "Items must be contiguous or overlapping to merge"
+            }
+        end
+        if next_entry.end_sec > merged_end then
+            merged_end = next_entry.end_sec
+        end
+    end
+
+    local selected_before = capture_selected_items()
+    local merge_ok = true
+    local merge_err = nil
+    local merged_item = nil
+
+    reaper.Undo_BeginBlock()
+    reaper.Main_OnCommand(40289, 0) -- Item: Unselect all items
+    for _, entry in ipairs(entries) do
+        if reaper.ValidatePtr(entry.item, "MediaItem*") then
+            reaper.SetMediaItemSelected(entry.item, true)
+        else
+            merge_ok = false
+            merge_err = "Invalid item pointer before merge"
+            break
+        end
+    end
+
+    if merge_ok then
+        reaper.Main_OnCommand(41588, 0) -- Item: Glue items
+        local selected_count = reaper.CountSelectedMediaItems(0)
+        if selected_count ~= 1 then
+            merge_ok = false
+            merge_err = "Glue operation did not produce exactly one item"
+        else
+            merged_item = reaper.GetSelectedMediaItem(0, 0)
+            if not merged_item or not reaper.ValidatePtr(merged_item, "MediaItem*") then
+                merge_ok = false
+                merge_err = "Merged item is invalid"
+            end
+        end
+    end
+
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Merge Media Items", -1)
+    restore_selected_items(selected_before)
+
+    if not merge_ok then
+        return false, { code = "INTERNAL_ERROR", message = merge_err or "Failed to merge items" }
+    end
+
+    local source_item_guids = {}
+    for _, entry in ipairs(entries) do
+        table.insert(source_item_guids, entry.guid)
+    end
+
+    return true, {
+        source_item_guids = source_item_guids,
+        merged_item = build_item_summary(merged_item, false),
+        merged = true
+    }
+end
+
+function M.delete(param)
+    if not param or not param.item_guid then
+        return false, { code = "INVALID_PARAM", message = "item_guid is required" }
+    end
+
+    if type(param.item_guid) ~= "string" or param.item_guid == "" then
+        return false, { code = "INVALID_PARAM", message = "item_guid must be a non-empty string" }
+    end
+
+    local item = find_item_by_guid(param.item_guid)
+    if not item then
+        return false, { code = "NOT_FOUND", message = "Item not found: " .. tostring(param.item_guid) }
+    end
+
+    local track_obj = reaper.GetMediaItem_Track(item)
+    if not track_obj then
+        return false, { code = "INTERNAL_ERROR", message = "Failed to locate item track" }
+    end
+
+    reaper.Undo_BeginBlock()
+    local ok = reaper.DeleteTrackMediaItem(track_obj, item)
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Delete Media Item", -1)
+
+    if not ok then
+        return false, { code = "INTERNAL_ERROR", message = "Failed to delete item" }
+    end
+
+    return true, {
+        item_guid = param.item_guid,
+        deleted = true
+    }
 end
 
 return M

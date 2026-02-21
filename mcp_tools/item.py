@@ -3,7 +3,7 @@ Item 工具模块
 提供 item 的创建、查询、定位与长度设置接口。
 """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from mcp_bridge import bridge
 
@@ -200,5 +200,61 @@ def set_length(item_guid: str, length: float) -> Dict[str, Any]:
         {
             "item_guid": item_guid,
             "length": length,
+        },
+    )
+
+
+def split(item_guid: str, times: List[float]) -> Dict[str, Any]:
+    """
+    在指定绝对时间点将 item 切分为多段。
+
+    Args:
+        item_guid: 目标 item GUID
+        times: 切分时间点（秒，项目绝对时间）
+
+    Returns:
+        dict: REAPER 返回结果，成功时包含切分后的 item 列表
+    """
+    return bridge.call_reaper(
+        "item.split",
+        {
+            "item_guid": item_guid,
+            "times": times,
+        },
+    )
+
+
+def merge(item_guids: List[str]) -> Dict[str, Any]:
+    """
+    将多个 item 合并为一个新 item。
+
+    Args:
+        item_guids: 待合并 item GUID 列表
+
+    Returns:
+        dict: REAPER 返回结果，成功时包含合并后的新 item 信息
+    """
+    return bridge.call_reaper(
+        "item.merge",
+        {
+            "item_guids": item_guids,
+        },
+    )
+
+
+def delete(item_guid: str) -> Dict[str, Any]:
+    """
+    删除指定 item。
+
+    Args:
+        item_guid: 目标 item GUID
+
+    Returns:
+        dict: REAPER 返回结果，成功时包含 deleted 标记
+    """
+    return bridge.call_reaper(
+        "item.delete",
+        {
+            "item_guid": item_guid,
         },
     )

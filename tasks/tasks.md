@@ -7,7 +7,6 @@
 -   [ ] Bossa，如果我得到 MIDI 和原来风格不一样，可以做一次迁移
 -   [ ] 评估方法：diffusion based 和重新编曲后的比较，让大家看看哪个好听，vote 以后就行，
         不需要做成一个产品给别人用
--   [ ] [task035: 增加 REAPER marker CRUD](./task035-marker-crud.md)
 
 ## 遗留问题
 
