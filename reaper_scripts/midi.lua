@@ -242,6 +242,25 @@ local function infer_program_from_track_name(track_name)
     return best_program
 end
 
+local function get_project_default_tempo_timesig()
+    local retval, _, _, ts_num, ts_den, tempo = reaper.TimeMap_GetMeasureInfo(0, 0)
+    if not retval or retval < 0 then
+        logger.error("无法通过 TimeMap_GetMeasureInfo 获取项目默认 Tempo/TimeSig")
+        return nil, nil, nil
+    end
+
+    if not tempo or tempo <= 0 then
+        tempo = reaper.Master_GetTempo()
+    end
+
+    if not ts_num or ts_num <= 0 or not ts_den or ts_den <= 0 then
+        logger.error(string.format("获取项目默认拍号失败: num=%s, den=%s", tostring(ts_num), tostring(ts_den)))
+        return nil, nil, nil
+    end
+
+    return tempo, ts_num, ts_den
+end
+
 -- 添加 Meta 事件（Set Tempo / Time Signature）
 local function add_tempo_event(events, m, tick)
     local mpqn = calculate_mpqn(m.bpm, m.den)
@@ -266,6 +285,18 @@ local function add_tempo_event(events, m, tick)
         msg = string.char(0xFF, 0x58, 0x04, m.num, den_pow, 24, 8),
         type = 4
     })
+end
+
+local function add_program_event(events, tick, channel, program, reason)
+    local ch = channel & 0x0F
+    local pgm = program & 0x7F
+    table.insert(events, {
+        tick = tick,
+        msg = string.char(0xC0 | ch, pgm),
+        type = 3
+    })
+    logger.info(string.format("写入 Program Change: reason=%s, tick=%d, ch=%d, program=%d",
+        reason or "unknown", tick, ch, pgm))
 end
 
 -- 添加音符事件
@@ -304,8 +335,73 @@ local function add_note_events(events, tr, track_name, start_time, end_time)
     end
 end
 
--- 添加初始化事件（轨道名称、Program Change、Reset Controllers）
-local function add_init_events(events, track_name, first_tempo)
+local function collect_program_events(tr, start_time, end_time)
+    local carry_program_by_channel = {}
+    local in_window_program_events = {}
+
+    for j = 0, reaper.GetTrackNumMediaItems(tr) - 1 do
+        local item = reaper.GetTrackMediaItem(tr, j)
+        local take = reaper.GetActiveTake(item)
+        if take and reaper.TakeIsMIDI(take) then
+            local _, _, ccevtcnt = reaper.MIDI_CountEvts(take)
+            for ccidx = 0, ccevtcnt - 1 do
+                local ok, _, muted, ppqpos, chanmsg, chan, msg2, _ = reaper.MIDI_GetCC(take, ccidx)
+                if ok and not muted and chanmsg == 0xC0 then
+                    local event_time = reaper.MIDI_GetProjTimeFromPPQPos(take, ppqpos)
+                    local ch = chan & 0x0F
+                    local program = msg2 & 0x7F
+                    if event_time < start_time then
+                        local current = carry_program_by_channel[ch]
+                        if not current or event_time >= current.time then
+                            carry_program_by_channel[ch] = {
+                                time = event_time,
+                                channel = ch,
+                                program = program
+                            }
+                        end
+                    elseif start_time <= event_time and event_time < end_time then
+                        table.insert(in_window_program_events, {
+                            tick = math.max(0, time_to_tick(take, event_time, start_time)),
+                            channel = ch,
+                            program = program,
+                            time = event_time
+                        })
+                    end
+                end
+            end
+        end
+    end
+
+    local exported_program_events = {}
+    for _, event in pairs(carry_program_by_channel) do
+        table.insert(exported_program_events, {
+            tick = 0,
+            channel = event.channel,
+            program = event.program,
+            reason = "source-carry"
+        })
+    end
+
+    table.sort(in_window_program_events, function(a, b)
+        if a.tick ~= b.tick then return a.tick < b.tick end
+        if a.channel ~= b.channel then return a.channel < b.channel end
+        return a.program < b.program
+    end)
+
+    for _, event in ipairs(in_window_program_events) do
+        table.insert(exported_program_events, {
+            tick = event.tick,
+            channel = event.channel,
+            program = event.program,
+            reason = "source-window"
+        })
+    end
+
+    return #exported_program_events > 0, exported_program_events
+end
+
+-- 添加初始化事件（轨道名称、Reset Controllers）
+local function add_init_events(events, track_name)
     -- 轨道名称 (FF 03)
     table.insert(events, {
         tick = 0,
@@ -313,27 +409,10 @@ local function add_init_events(events, track_name, first_tempo)
         type = 5
     })
 
-    -- Set Tempo (初始)
-    local mpqn = calculate_mpqn(first_tempo.bpm, first_tempo.den)
-    table.insert(events, {
-        tick = 0,
-        msg = string.char(0xFF, 0x51, 0x03, (mpqn >> 16) & 0xFF, (mpqn >> 8) & 0xFF, mpqn & 0xFF),
-        type = 5
-    })
-
     -- Reset All Controllers (B0 79 00)
     table.insert(events, {
         tick = 0,
         msg = string.char(0xB0, 0x79, 0x00),
-        type = 5
-    })
-
-    -- Program Change - 从轨道名称推断乐器
-    local program = infer_program_from_track_name(track_name)
-    logger.info(string.format("轨道 [%s] 设置 Program Change: #%d", track_name, program))
-    table.insert(events, {
-        tick = 0,
-        msg = string.char(0xC0, program & 0x7F),
         type = 5
     })
 end
@@ -348,8 +427,7 @@ local function collect_tempo_map(end_time)
     local last_valid_num, last_valid_den = nil, nil
 
     if marker_count == 0 then
-        local cur_bpm = reaper.Master_GetTempo()
-        local num, den = reaper.GetProjectTimeSignature2(0)
+        local cur_bpm, num, den = get_project_default_tempo_timesig()
 
         if not num or num <= 0 or not den or den <= 0 then
             logger.error(string.format("获取项目初始拍号失败: num=%s, den=%s", tostring(num), tostring(den)))
@@ -386,8 +464,7 @@ local function collect_tempo_map(end_time)
         end
 
         if #tempo_map == 0 or tempo_map[1].time > 0 then
-            local cur_bpm = reaper.Master_GetTempo()
-            local num, den = reaper.GetProjectTimeSignature2(0)
+            local cur_bpm, num, den = get_project_default_tempo_timesig()
 
             if not num or num <= 0 or not den or den <= 0 then
                 logger.error(string.format("获取初始拍号失败（回退）: num=%s, den=%s", tostring(num), tostring(den)))
@@ -463,13 +540,26 @@ local function perform_midi_render(tracks, start_time, end_time, session_id)
 
         -- 构建事件列表
         local events = {}
-        add_init_events(events, track_name, tempo_map[1])
+        add_init_events(events, track_name)
 
         for _, m in ipairs(tempo_map) do
             local tick = time_to_tick(calc_take, m.time, start_time)
             if tick >= 0 then
                 add_tempo_event(events, m, tick)
             end
+        end
+
+        local has_source_program, source_program_events = collect_program_events(tr, start_time, end_time)
+        if has_source_program then
+            logger.info(string.format("轨道 [%s] 检测到源 Program 事件 %d 条，保留源乐器设置",
+                track_name, #source_program_events))
+            for _, program_event in ipairs(source_program_events) do
+                add_program_event(events, program_event.tick, program_event.channel, program_event.program, program_event.reason)
+            end
+        else
+            local inferred_program = infer_program_from_track_name(track_name)
+            logger.info(string.format("轨道 [%s] 未发现源 Program，使用推断 Program #%d", track_name, inferred_program))
+            add_program_event(events, 0, 0, inferred_program, "inferred-from-track-name")
         end
 
         add_note_events(events, tr, track_name, start_time, end_time)
