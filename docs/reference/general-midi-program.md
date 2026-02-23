@@ -145,65 +145,65 @@ Synth Lead (合成主奏) - 80-87
 
 Synth Pad (合成垫音) - 88-95
 
-| Program | 乐器 |
-|---------|------|
-| 88 | Pad 1 (new age) |
-| 89 | Pad 2 (warm) |
-| 90 | Pad 3 (polysynth) |
-| 91 | Pad 4 (choir) |
-| 92 | Pad 5 (bowed) |
-| 93 | Pad 6 (metallic) |
-| 94 | Pad 7 (halo) |
-| 95 | Pad 8 (sweep) |
+| Program | 乐器              |
+| ------- | ----------------- |
+| 88      | Pad 1 (new age)   |
+| 89      | Pad 2 (warm)      |
+| 90      | Pad 3 (polysynth) |
+| 91      | Pad 4 (choir)     |
+| 92      | Pad 5 (bowed)     |
+| 93      | Pad 6 (metallic)  |
+| 94      | Pad 7 (halo)      |
+| 95      | Pad 8 (sweep)     |
 
 Synth Effects (合成特效) - 96-103
 
-| Program | 乐器 |
-|---------|------|
-| 96 | FX 1 (rain) |
-| 97 | FX 2 (soundtrack) |
-| 98 | FX 3 (crystal) |
-| 99 | FX 4 (atmosphere) |
-| 100 | FX 5 (brightness) |
-| 101 | FX 6 (goblins) |
-| 102 | FX 7 (echoes) |
-| 103 | FX 8 (sci-fi) |
+| Program | 乐器              |
+| ------- | ----------------- |
+| 96      | FX 1 (rain)       |
+| 97      | FX 2 (soundtrack) |
+| 98      | FX 3 (crystal)    |
+| 99      | FX 4 (atmosphere) |
+| 100     | FX 5 (brightness) |
+| 101     | FX 6 (goblins)    |
+| 102     | FX 7 (echoes)     |
+| 103     | FX 8 (sci-fi)     |
 
 Ethnic (民族乐器) - 104-111
 
-| Program | 乐器 |
-|---------|------|
-| 104 | Sitar |
-| 105 | Banjo |
-| 106 | Shamisen |
-| 107 | Koto |
-| 108 | Kalimba |
-| 109 | Bag Pipe |
-| 110 | Fiddle |
-| 111 | Shanai |
+| Program | 乐器     |
+| ------- | -------- |
+| 104     | Sitar    |
+| 105     | Banjo    |
+| 106     | Shamisen |
+| 107     | Koto     |
+| 108     | Kalimba  |
+| 109     | Bag Pipe |
+| 110     | Fiddle   |
+| 111     | Shanai   |
 
 Percussive (打击乐/音效) - 112-119
 
-| Program | 乐器 |
-|---------|------|
-| 112 | Timbale |
-| 113 | Conga |
-| 114 | Vibraslap |
-| 115 | Cabasa |
-| 116 | Maracas |
-| 117 | Samba Whistle |
-| 118 | Guru Gong |
-| 119 | Jingle Bell |
+| Program | 乐器          |
+| ------- | ------------- |
+| 112     | Timbale       |
+| 113     | Conga         |
+| 114     | Vibraslap     |
+| 115     | Cabasa        |
+| 116     | Maracas       |
+| 117     | Samba Whistle |
+| 118     | Guru Gong     |
+| 119     | Jingle Bell   |
 
 Sound Effects (声音特效) - 120-127
 
-| Program | 乐器 |
-|---------|------|
-| 120 | Guitar Fret Noise |
-| 121 | Breath Noise |
-| 122 | Seashore |
-| 123 | Bird Tweet |
-| 124 | Telephone Ring |
-| 125 | Helicopter |
-| 126 | Applause |
-| 127 | Gunshot |
+| Program | 乐器              |
+| ------- | ----------------- |
+| 120     | Guitar Fret Noise |
+| 121     | Breath Noise      |
+| 122     | Seashore          |
+| 123     | Bird Tweet        |
+| 124     | Telephone Ring    |
+| 125     | Helicopter        |
+| 126     | Applause          |
+| 127     | Gunshot           |

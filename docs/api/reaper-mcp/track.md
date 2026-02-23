@@ -145,7 +145,8 @@ reply success:
 param:
 
 -   index: int
--   color: int
+-   color: int[3]（`clear=false` 时必填）
+-   clear: bool（默认 false，`true` 时清除自定义颜色并恢复默认）
 
 request.json:
 
@@ -162,6 +163,26 @@ request.json:
     "param": {
       "index": 0,
       "color": [255,0,0]
+    }
+  }
+}
+```
+
+clear to default:
+
+```json
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000014_track_clear_color_test",
+    "ts_ms": 1732854000014,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.set_color",
+    "param": {
+      "index": 0,
+      "clear": true
     }
   }
 }
@@ -188,8 +209,8 @@ reply success:
     "ok": true,
     "result": {
       "track_index": 0,
-      "color": [255,0,0],
-      "set_color": true
+      "color_rgb": [255,0,0],
+      "has_custom_color": true
     },
     "error": null
   }
@@ -242,6 +263,181 @@ reply success:
     "result": {
       "track_index": 0,
       "color": [255,0,0]
+    },
+    "error": null
+  }
+}
+```
+
+## track.set_mute
+
+param:
+
+-   index: int
+-   action: str (`set` | `toggle`, 默认 `set`)
+-   mute: bool（`action=set` 时必填）
+
+request.json:
+
+```json
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000010_track_set_mute_test",
+    "ts_ms": 1732854000010,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.set_mute",
+    "param": {
+      "index": 0,
+      "action": "set",
+      "mute": true
+    }
+  }
+}
+```
+
+reply success:
+
+```json
+{
+  "response": {
+    "ok": true,
+    "result": {
+      "track_index": 0,
+      "muted": true,
+      "action": "set"
+    },
+    "error": null
+  }
+}
+```
+
+## track.get_mute
+
+param:
+
+-   index: int
+
+request.json:
+
+```json
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000011_track_get_mute_test",
+    "ts_ms": 1732854000011,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.get_mute",
+    "param": {
+      "index": 0
+    }
+  }
+}
+```
+
+reply success:
+
+```json
+{
+  "response": {
+    "ok": true,
+    "result": {
+      "track_index": 0,
+      "muted": true
+    },
+    "error": null
+  }
+}
+```
+
+## track.set_solo
+
+param:
+
+-   index: int
+-   action: str (`set` | `toggle`, 默认 `set`)
+-   solo: bool（`action=set` 时必填）
+-   mode: str (`default` | `non_sip` | `sip`，默认 `default`)
+
+request.json:
+
+```json
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000012_track_set_solo_test",
+    "ts_ms": 1732854000012,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.set_solo",
+    "param": {
+      "index": 0,
+      "action": "set",
+      "solo": true,
+      "mode": "default"
+    }
+  }
+}
+```
+
+reply success:
+
+```json
+{
+  "response": {
+    "ok": true,
+    "result": {
+      "track_index": 0,
+      "soloed": true,
+      "solo_state": 1,
+      "action": "set",
+      "mode": "default"
+    },
+    "error": null
+  }
+}
+```
+
+## track.get_solo
+
+param:
+
+-   index: int
+
+request.json:
+
+```json
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000013_track_get_solo_test",
+    "ts_ms": 1732854000013,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.get_solo",
+    "param": {
+      "index": 0
+    }
+  }
+}
+```
+
+reply success:
+
+```json
+{
+  "response": {
+    "ok": true,
+    "result": {
+      "track_index": 0,
+      "soloed": true,
+      "solo_state": 1
     },
     "error": null
   }
