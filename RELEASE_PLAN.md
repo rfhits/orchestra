@@ -1,7 +1,7 @@
 # Orchestra GitHub 发布整理计划（Draft）
 
 > 目的：先把仓库文档与目录整理到“可对外发布”状态，再进行版本发布。  
-> 状态：仅规划，不执行迁移。
+> 状态：进行中（文档主入口已重写，持续收尾）。
 
 ## 1. 当前 Markdown 盘点（已扫描）
 
@@ -119,11 +119,12 @@ research/
 1. What is Orchestra
 2. Installation
 3. Quick Start (5 min)
-4. REAPER integration
-5. Core capabilities
-6. Limitations
-7. Docs index
-8. Contributing / License
+4. Demos and ecosystem
+5. REAPER integration
+6. MCP client configuration
+7. Core capabilities
+8. Limitations
+9. Contributing / License
 
 ## 5.2 README_CN
 
@@ -137,9 +138,10 @@ research/
 ## 6. 发布前清单（Checklist）
 
 - [ ] 所有迁移完成，旧路径建立重定向说明（或更新链接）
-- [ ] `README.md` 英文可独立指导安装与运行
-- [ ] `README_CN.md` 完成并与英文一致
-- [ ] docs 索引页可导航到 API、快速开始、开发文档
+- [x] `README.md` 英文可独立指导安装与运行
+- [x] `README_CN.md` 完成并与英文一致
+- [x] `ARCHITECTURE.md` / `docs/zh/ARCHITECTURE_CN.md` 双语就位
+- [ ] docs 索引页可导航到 API、快速开始、开发文档（后续再做）
 - [ ] `research/` 与产品文档隔离
 - [ ] 检查敏感信息/本地路径/个人内容
 - [ ] 更新版本号与 CHANGELOG

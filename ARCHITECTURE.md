@@ -1,199 +1,95 @@
-# Orchestra Client Architecture v2
+# Orchestra Architecture
 
-基于用户反馈重新设计的模块化架构，解决了原版代码的以下问题：
+This document describes the production architecture of Orchestra.
 
-## 主要改进
+## 1. Overview
 
-### 1. **模块化设计**
+Orchestra bridges AI tools and REAPER through file-based IPC.
 
--   ✅ **文件分离**：功能按职责拆分为独立模块
--   ✅ **动态加载**：使用模块加载器管理依赖关系
--   ✅ **清晰接口**：每个模块都有明确的职责和接口
+- **REAPER side (Lua):** executes DAW operations
+- **Python side (MCP server):** exposes tools and forwards requests
+- **IPC layer:** request/reply JSON files in `~/.orchestra`
 
-### 2. **专业 JSON 处理**
+## 2. Main Components
 
--   ✅ **外部库支持**：`json.lua`
--   ✅ **向后兼容**：自动回退到内置解析器
--   ✅ **完整功能**：支持数组、对象、嵌套结构
+### 2.1 Python Layer
 
-### 3. **表驱动分派**
+- `cli.py`
+  - `orch scripts <path>`: install REAPER scripts
+  - `orch launch`: run MCP server on stdio
+- `server.py`
+  - auto-discovers public functions under `mcp_tools/`
+  - registers them as MCP tools
+- `mcp_bridge.py`
+  - writes request JSON to `~/.orchestra/inbox`
+  - waits for reply JSON from `~/.orchestra/outbox`
+  - archives handled replies
+- `mcp_tools/*`
+  - typed tool wrappers (track/item/audio/midi/project/marker/take)
 
--   ✅ **消除 if-else 链**：使用表进行函数分派
--   ✅ **易于扩展**：新增功能只需注册处理器
--   ✅ **错误处理**：统一的错误响应机制
+### 2.2 REAPER Layer
 
-### 4. **改进的循环机制**
+- `reaper_scripts/orchestra_loader.lua`
+  - bootstrap and module loading entrypoint
+- `reaper_scripts/orchestra_main.lua`
+  - polling/defer loop for incoming requests
+- `reaper_scripts/dispatcher.lua`
+  - dispatches `module.method` calls
+- domain modules (`track.lua`, `item.lua`, `audio.lua`, `midi.lua`, etc.)
+  - validate params
+  - call REAPER API
+  - return normalized result/error
 
--   ✅ **reaper.defer**：替代 while true + sleep
--   ✅ **非阻塞**：不影响 REAPER 界面响应
--   ✅ **资源友好**：只在有请求时处理
+## 3. IPC Contract
 
-## 模块结构
+Directories under `~/.orchestra/`:
 
-```
-orchestra_loader.lua    # 模块加载器和启动入口
-├── logger.lua          # 日志记录系统
-├── file_manager.lua    # 文件系统操作
-├── json_manager.lua    # JSON解析和生成
-├── track.lua           # Track操作封装
-├── media.lua           # Media操作封装
-├── project.lua         # Project操作封装
-├── dispatcher.lua      # 动态函数分派器
-└── orchestra_main.lua  # 主逻辑和循环
-```
+- `inbox/`: incoming request files
+- `outbox/`: reply files from REAPER side
+- `archive/`: historical processed replies
 
-## 模块详解
+Call flow:
 
-### orchestra_loader.lua
+1. MCP tool receives call
+2. Python bridge writes request JSON to `inbox`
+3. REAPER loop consumes request and executes function
+4. REAPER writes reply JSON to `outbox`
+5. Python reads reply and returns result to MCP client
 
--   **职责**：模块加载管理和启动
--   **功能**：
-    -   自动检测脚本路径
-    -   动态注入 package.path
-    -   安全加载所有模块
-    -   验证关键模块
+## 4. Tool Naming Convention
 
-### logger.lua
+- Python function path: `mcp_tools/<module>.py::function`
+- REAPER method name: `"module.function"`
 
--   **职责**：统一日志系统
--   **功能**：
-    -   多级别日志（DEBUG/INFO/WARN/ERROR）
-    -   文件和控制台双输出
-    -   时间戳和格式化
+Example:
 
-### file_manager.lua
+- Python: `mcp_tools/track.py::set_mute`
+- REAPER call: `track.set_mute`
 
--   **职责**：文件系统操作封装
--   **功能**：
-    -   目录初始化和管理
-    -   原子文件操作
-    -   IPC 协议文件管理
+## 5. Error Model
 
-### json_manager.lua
+Lua module functions return:
 
--   **职责**：JSON处理
+- success: `return true, { ... }`
+- failure: `return false, { code = "...", message = "..." }`
 
-### track.lua
+Common error codes:
 
--   **职责**：Track操作封装
--   **功能**：
-    -   创建、删除、查询轨道
-    -   轨道信息获取
-    -   错误处理
+- `INVALID_PARAM`
+- `NOT_FOUND`
+- `INTERNAL_ERROR`
+- `FILE_NOT_FOUND`
+- `FILE_READ_ERROR`
+- `JSON_PARSE_ERROR`
+- `MODULE_NOT_FOUND`
+- `METHOD_NOT_FOUND`
+- `METHOD_CALL_ERROR`
 
-### media.lua
+## 6. Design Principles
 
--   **职责**：Media操作封装
--   **功能**：
-    -   插入媒体文件
-    -   媒体文件验证
-    -   错误处理
+- **Typed MCP surface:** Python wrappers use type hints for schema generation
+- **Thin Python wrappers:** DAW behavior lives in REAPER Lua modules
+- **Atomic file-based IPC:** robust and easy to inspect/debug
+- **Modular REAPER scripts:** each module owns one DAW domain
+- **Testability:** JSON request tests under `reaper_scripts/test/`
 
-### project.lua
-
--   **职责**：Project操作封装
--   **功能**：
-    -   获取项目信息
-    -   项目状态查询
-
-### dispatcher.lua
-
--   **职责**：动态函数分派
--   **功能**：
-    -   字符串驱动的函数分派（module.method）
-    -   统一响应格式
-    -   错误处理和验证
-    -   动态模块调用
-
-### orchestra_main.lua
-
--   **职责**：主逻辑控制
--   **功能**：
-    -   reaper.defer 循环
-    -   请求处理流程
-    -   模块协调
-    -   状态管理
-
-## 使用方法
-
-### 启动 Orchestra
-
-1. **启动**：运行 `orchestra_loader.lua`
-2. **自动加载**：所有模块自动加载和初始化
-3. **后台运行**：使用 defer 机制不影响界面
-
-### 停止 Orchestra
-
-1. **优雅停止**：运行 `orchestra_stop.lua` 创建停止信号
-2. **强制停止**：直接关闭 REAPER 或脚本
-
-### 运行测试
-
-1. **测试运行器**：运行 `test/test_runner.lua` 选择测试
-2. **手动测试**：将 JSON 文件复制到 `~/.orchestra/inbox/`
-
-## 扩展新功能
-
-### 1. 添加新的功能模块
-
-创建新的独立模块文件（如 `effects.lua`）：
-
-```lua
--- effects.lua
-local M = {}
-
-function M.apply_reverb(param)
-    -- 实现逻辑
-    return true, {result = "reverb applied"}
-end
-
-return M
-```
-
-### 2. 直接使用新功能
-
-无需修改dispatcher，直接调用：
-
-```json
-{
-  "request": {
-    "func": "effects.apply_reverb",
-    "param": {"intensity": 0.8}
-  }
-}
-```
-
-### 3. 添加新模块到加载列表
-
-在 `orchestra_loader.lua` 中添加到 modules 列表：
-
-```lua
-local modules = {
-    "file_manager",
-    "json_manager",
-    "track",
-    "media",
-    "project",
-    "dispatcher",
-    "logger",
-    "effects"  -- 新模块
-}
-```
-
-## 协议支持
-
-完全兼容原始的 Orchestra File IPC Protocol v1：
-
--   ✅ 原子文件操作
--   ✅ .part/.req/.reply 后缀规范
--   ✅ 单消费者语义
--   ✅ 错误处理机制
-
-## 性能优势
-
-1. **模块化**：按需加载，减少内存占用
-2. **非阻塞**：reaper.defer 提升界面响应
-3. **专业库**：外部 JSON 库提升性能
-4. **表分派**：O(1)查找替代 O(n)if 链
-
-这个新架构解决了原版代码的所有问题，提供了更好的可维护性、扩展性和性能。
