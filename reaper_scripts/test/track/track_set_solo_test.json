@@ -1,0 +1,17 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000012_track_set_solo_test",
+    "ts_ms": 1732854000012,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.set_solo",
+    "param": {
+      "index": 0,
+      "action": "set",
+      "solo": true,
+      "mode": "default"
+    }
+  }
+}

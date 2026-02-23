@@ -472,6 +472,107 @@ function M.set_length(param)
     return true, { item_guid = param.item_guid, item_length = length }
 end
 
+local function parse_rgb(color)
+    if type(color) ~= "table" or #color ~= 3 then
+        return nil, "color must be [r, g, b] array"
+    end
+
+    local rgb = {}
+    for i = 1, 3 do
+        local v = color[i]
+        if type(v) ~= "number" or v % 1 ~= 0 or v < 0 or v > 255 then
+            return nil, "color values must be integers in range 0..255"
+        end
+        rgb[i] = v
+    end
+
+    return rgb, nil
+end
+
+function M.set_color(param)
+    if not param or not param.item_guid then
+        return false, { code = "INVALID_PARAM", message = "item_guid is required" }
+    end
+
+    local item = find_item_by_guid(param.item_guid)
+    if not item then
+        return false, { code = "NOT_FOUND", message = "Item not found: " .. tostring(param.item_guid) }
+    end
+
+    local clear = (param.clear == true)
+    local color_value = 0
+    local rgb = nil
+
+    if not clear then
+        local err
+        rgb, err = parse_rgb(param.color)
+        if not rgb then
+            return false, { code = "INVALID_PARAM", message = err }
+        end
+        color_value = reaper.ColorToNative(rgb[1], rgb[2], rgb[3]) | 0x1000000
+    end
+
+    reaper.Undo_BeginBlock()
+    local ok = reaper.SetMediaItemInfo_Value(item, "I_CUSTOMCOLOR", color_value)
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Set Media Item Color", -1)
+
+    if not ok then
+        return false, { code = "INTERNAL_ERROR", message = "Failed to set item color" }
+    end
+
+    if clear then
+        return true, {
+            item_guid = param.item_guid,
+            has_custom_color = false,
+            rgb = nil,
+            hex = nil
+        }
+    end
+
+    return true, {
+        item_guid = param.item_guid,
+        has_custom_color = true,
+        rgb = { rgb[1], rgb[2], rgb[3] },
+        hex = string.format("#%02X%02X%02X", rgb[1], rgb[2], rgb[3])
+    }
+end
+
+function M.get_color(param)
+    if not param or not param.item_guid then
+        return false, { code = "INVALID_PARAM", message = "item_guid is required" }
+    end
+
+    local item = find_item_by_guid(param.item_guid)
+    if not item then
+        return false, { code = "NOT_FOUND", message = "Item not found: " .. tostring(param.item_guid) }
+    end
+
+    local raw_color = reaper.GetMediaItemInfo_Value(item, "I_CUSTOMCOLOR")
+    if type(raw_color) ~= "number" then
+        return false, { code = "INTERNAL_ERROR", message = "Failed to get item color" }
+    end
+
+    local raw_int = math.floor(raw_color + 0.5)
+    if raw_int == 0 or (raw_int & 0x1000000 == 0) then
+        return true, {
+            item_guid = param.item_guid,
+            has_custom_color = false,
+            rgb = nil,
+            hex = nil
+        }
+    end
+
+    local native_color = raw_int & 0xFFFFFF
+    local r, g, b = reaper.ColorFromNative(native_color)
+    return true, {
+        item_guid = param.item_guid,
+        has_custom_color = true,
+        rgb = { r, g, b },
+        hex = string.format("#%02X%02X%02X", r, g, b)
+    }
+end
+
 function M.split(param)
     if not param or not param.item_guid then
         return false, { code = "INVALID_PARAM", message = "item_guid is required" }

@@ -77,6 +77,37 @@ def find_by_guid(item_guid: str) -> Dict[str, Any]:
     return bridge.call_reaper("item.find_by_guid", {"item_guid": item_guid})
 
 
+def set_color(
+    item_guid: str,
+    color: List[int] | None = None,
+    clear: bool = False,
+) -> Dict[str, Any]:
+    """
+    设置 item 颜色。
+
+    Args:
+        item_guid: item GUID
+        color: RGB 颜色数组 [r, g, b]，clear=False 时必填
+        clear: 是否清除 item 自定义颜色
+
+    Notes:
+        - 传入 [0, 0, 0] 会设置“自定义黑色”，不是“恢复默认颜色”。
+        - 这是 REAPER I_CUSTOMCOLOR 的语义：自定义颜色需要通过 clear=True（底层写 0）来清除。
+        - 如需恢复主题默认 item 颜色，请使用 clear=True，而不是 color=[0, 0, 0]。
+    """
+    payload: Dict[str, Any] = {"item_guid": item_guid, "clear": clear}
+    if color is not None:
+        payload["color"] = color
+    return bridge.call_reaper("item.set_color", payload)
+
+
+def get_color(item_guid: str) -> Dict[str, Any]:
+    """
+    获取 item 颜色。
+    """
+    return bridge.call_reaper("item.get_color", {"item_guid": item_guid})
+
+
 def list_by_track(
     track: str | int,
     begin_second: float | None = None,

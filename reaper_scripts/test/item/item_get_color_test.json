@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854600008_item_get_color_test",
+    "ts_ms": 1732854600008,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "item.get_color",
+    "param": {
+      "item_guid": "{REPLACE_WITH_ITEM_GUID}"
+    }
+  }
+}

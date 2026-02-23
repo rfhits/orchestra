@@ -328,17 +328,12 @@ end
 
 function M.set_color(params)
     local track_index = params.index
-    -- 建议协议约定：color 是一个包含 {r, g, b} 的表，或者 hex 字符串
-    -- 这里演示最通用的 {r, g, b} 方式，例如：[255, 0, 0]
+    local clear = (params.clear == true)
     local rgb = params.color
 
     -- 1. 基础校验
     if track_index == nil or track_index < 0 then
         return false, { code = "INVALID_PARAM", message = "Invalid track index" }
-    end
-
-    if type(rgb) ~= "table" or #rgb ~= 3 then
-        return false, { code = "INVALID_PARAM", message = "Color must be [r, g, b] array, e.g. [255, 0, 0]" }
     end
 
     -- 2. 获取轨道
@@ -347,15 +342,18 @@ function M.set_color(params)
         return false, { code = "NOT_FOUND", message = "Track not found at index " .. tostring(track_index) }
     end
 
-    -- 3. 颜色转换核心逻辑 (Critical Logic)
-    local r, g, b = rgb[1], rgb[2], rgb[3]
+    local final_color_value = 0
+    local native_color = nil
+    if not clear then
+        if type(rgb) ~= "table" or #rgb ~= 3 then
+            return false, { code = "INVALID_PARAM", message = "Color must be [r, g, b] array, e.g. [255, 0, 0]" }
+        end
 
-    -- A. 将 RGB 转换为系统原生颜色值 (解决 OS Dependent 问题)
-    local native_color = reaper.ColorToNative(r, g, b)
-
-    -- B. 加上“自定义颜色启用”标志 (解决 0x1000000 问题)
-    -- Lua 5.3+ 支持 | 运算符。Reaper 内置 Lua 肯定支持。
-    local final_color_value = native_color | 0x1000000
+        local r, g, b = rgb[1], rgb[2], rgb[3]
+        native_color = reaper.ColorToNative(r, g, b)
+        -- 需要显式打开自定义颜色位，否则只是存储，不会生效。
+        final_color_value = native_color | 0x1000000
+    end
 
     -- 4. 设置属性
     -- 注意：API 名字是 SetMediaTrackInfo_Value，没有 GetSet
@@ -365,10 +363,19 @@ function M.set_color(params)
         return false, { code = "INTERNAL_ERROR", message = "Reaper refused to set color" }
     end
 
+    if clear then
+        return true, {
+            track_index = track_index,
+            has_custom_color = false,
+            cleared = true
+        }
+    end
+
     return true, {
         track_index = track_index,
         color_rgb = rgb,
-        native_value = native_color
+        native_value = native_color,
+        has_custom_color = true
     }
 end
 
@@ -413,6 +420,167 @@ function M.get_color(params)
         has_custom_color = true,
         rgb = { r, g, b },
         hex = string.format("#%02X%02X%02X", r, g, b) -- 顺便返回 Hex，方便 Python 处理
+    }
+end
+
+local function validate_track_index(track_index)
+    if type(track_index) ~= "number" or track_index % 1 ~= 0 or track_index < 0 then
+        return nil, { code = "INVALID_PARAM", message = "Invalid track index" }
+    end
+
+    local track = M.find_track_by_index(track_index)
+    if not track then
+        return nil, { code = "NOT_FOUND", message = "Track not found: " .. tostring(track_index) }
+    end
+
+    return track, nil
+end
+
+function M.set_mute(param)
+    if not param then
+        return false, { code = "INVALID_PARAM", message = "param is required" }
+    end
+
+    local track_index = param.index
+    local track, track_err = validate_track_index(track_index)
+    if not track then
+        return false, track_err
+    end
+
+    local action = param.action or "set"
+    if action ~= "set" and action ~= "toggle" then
+        return false, { code = "INVALID_PARAM", message = "action must be 'set' or 'toggle'" }
+    end
+
+    local command = -1
+    if action == "set" then
+        if type(param.mute) ~= "boolean" then
+            return false, { code = "INVALID_PARAM", message = "mute must be boolean when action is 'set'" }
+        end
+        command = param.mute and 1 or 0
+    end
+
+    reaper.Undo_BeginBlock()
+    local new_state = reaper.SetTrackUIMute(track, command, 0)
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Set Track Mute", -1)
+
+    if type(new_state) ~= "number" or new_state < 0 then
+        return false, { code = "INTERNAL_ERROR", message = "SetTrackUIMute failed" }
+    end
+
+    local muted = (new_state > 0)
+    return true, {
+        track_index = track_index,
+        muted = muted,
+        action = action
+    }
+end
+
+function M.get_mute(param)
+    if not param then
+        return false, { code = "INVALID_PARAM", message = "param is required" }
+    end
+
+    local track_index = param.index
+    local track, track_err = validate_track_index(track_index)
+    if not track then
+        return false, track_err
+    end
+
+    local ok, muted = reaper.GetTrackUIMute(track)
+    if not ok then
+        return false, { code = "INTERNAL_ERROR", message = "GetTrackUIMute failed" }
+    end
+
+    return true, {
+        track_index = track_index,
+        muted = (muted == true)
+    }
+end
+
+function M.set_solo(param)
+    if not param then
+        return false, { code = "INVALID_PARAM", message = "param is required" }
+    end
+
+    local track_index = param.index
+    local track, track_err = validate_track_index(track_index)
+    if not track then
+        return false, track_err
+    end
+
+    local action = param.action or "set"
+    if action ~= "set" and action ~= "toggle" then
+        return false, { code = "INVALID_PARAM", message = "action must be 'set' or 'toggle'" }
+    end
+
+    local command = -1
+    local mode = param.mode or "default"
+    if action == "set" then
+        if type(param.solo) ~= "boolean" then
+            return false, { code = "INVALID_PARAM", message = "solo must be boolean when action is 'set'" }
+        end
+
+        if param.solo then
+            if mode == "default" then
+                command = 1
+            elseif mode == "non_sip" then
+                command = 2
+            elseif mode == "sip" then
+                command = 4
+            else
+                return false, { code = "INVALID_PARAM", message = "mode must be 'default', 'non_sip', or 'sip'" }
+            end
+        else
+            command = 0
+            mode = "off"
+        end
+    else
+        mode = "toggle"
+    end
+
+    reaper.Undo_BeginBlock()
+    local new_state = reaper.SetTrackUISolo(track, command, 0)
+    reaper.UpdateArrange()
+    reaper.Undo_EndBlock("Set Track Solo", -1)
+
+    if type(new_state) ~= "number" or new_state < 0 then
+        return false, { code = "INTERNAL_ERROR", message = "SetTrackUISolo failed" }
+    end
+
+    local solo_state = math.floor(new_state + 0.5)
+    local soloed = (solo_state > 0)
+    return true, {
+        track_index = track_index,
+        soloed = soloed,
+        solo_state = solo_state,
+        action = action,
+        mode = mode
+    }
+end
+
+function M.get_solo(param)
+    if not param then
+        return false, { code = "INVALID_PARAM", message = "param is required" }
+    end
+
+    local track_index = param.index
+    local track, track_err = validate_track_index(track_index)
+    if not track then
+        return false, track_err
+    end
+
+    local solo_val = reaper.GetMediaTrackInfo_Value(track, "I_SOLO")
+    if type(solo_val) ~= "number" then
+        return false, { code = "INTERNAL_ERROR", message = "Failed to get track solo state" }
+    end
+
+    local solo_state = math.floor(solo_val + 0.5)
+    return true, {
+        track_index = track_index,
+        soloed = (solo_state > 0),
+        solo_state = solo_state
     }
 end
 

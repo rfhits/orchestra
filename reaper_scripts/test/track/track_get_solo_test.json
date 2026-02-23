@@ -1,0 +1,14 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000013_track_get_solo_test",
+    "ts_ms": 1732854000013,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.get_solo",
+    "param": {
+      "index": 0
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000014_track_clear_color_test",
+    "ts_ms": 1732854000014,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.set_color",
+    "param": {
+      "index": 0,
+      "clear": true
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "meta": {
+    "version": "1",
+    "id": "1732854000010_track_set_mute_test",
+    "ts_ms": 1732854000010,
+    "agent_id": "test"
+  },
+  "request": {
+    "func": "track.set_mute",
+    "param": {
+      "index": 0,
+      "action": "set",
+      "mute": true
+    }
+  }
+}
